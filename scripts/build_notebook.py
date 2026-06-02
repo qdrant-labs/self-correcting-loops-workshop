@@ -543,10 +543,13 @@ print(f"benchmarked {len(calibration)} calibration questions live; "
       f"{sum(1 - r['full_gold_label'] for r in calibration)} weak retrievals")
 """)
 md(r"""
-The AUC catalog, computed from those live features:
+The AUC catalog, computed from those live features. The selection rule runs here too: keep the
+signals whose AUC clears **0.62**, then among those drop any that duplicate a stronger one
+(absolute correlation above **0.85**).
 """)
 code(r"""
 labels = [r["full_gold_label"] for r in calibration]
+AUC_BAR, CORR_MAX = 0.62, 0.85
 
 SIGNAL_COLUMN = {   # signal -> the feature-matrix column it reads (divergence is stored per detector)
     "dense_variance": "dense_variance", "score_variance": "score_variance",
@@ -558,8 +561,18 @@ def signal_auc(name):
     raw = roc_auc_score(labels, [r[SIGNAL_COLUMN[name]] for r in calibration])
     return max(raw, 1 - raw)            # discriminative power, regardless of direction
 
+def abs_corr(a, b):
+    return abs(float(np.corrcoef([r[SIGNAL_COLUMN[a]] for r in calibration],
+                                 [r[SIGNAL_COLUMN[b]] for r in calibration])[0, 1]))
+
 aucs = {name: signal_auc(name) for name in SIGNAL_COLUMN}
-kept = {"dense_variance", "score_variance"}    # cleared the AUC bar AND held up on a held-out validation split
+
+# apply the rule live: above the AUC bar, then drop any near-duplicate of a stronger kept signal
+kept = []
+for name in sorted((n for n in aucs if aucs[n] >= AUC_BAR), key=lambda n: -aucs[n]):
+    if all(abs_corr(name, k) <= CORR_MAX for k in kept):
+        kept.append(name)
+kept = set(kept)
 
 catalog = pd.DataFrame([
     {"signal": name, "AUC": aucs[name], "verdict": "kept" if name in kept else "dropped"}
@@ -575,17 +588,15 @@ you could not predict in advance: height and spread are distinct ideas that just
 together here. Both cuts, from the same live features:
 """)
 code(r"""
-def abs_corr(a, b):
-    return abs(float(np.corrcoef([r[SIGNAL_COLUMN[a]] for r in calibration],
-                                 [r[SIGNAL_COLUMN[b]] for r in calibration])[0, 1]))
-
-below_bar = sorted((n for n in aucs if aucs[n] < 0.62), key=lambda n: -aucs[n])
-print("below the AUC bar (< 0.62), dropped:")
-for n in below_bar:
+print(f"below the AUC bar (< {AUC_BAR}), dropped:")
+for n in sorted((x for x in aucs if aucs[x] < AUC_BAR), key=lambda x: -aucs[x]):
     print(f"  {n:22s} AUC {aucs[n]:.2f}")
 
-print("\nredundant (|corr| > 0.85 with a signal we keep), dropped:")
-print(f"  {'max_score':16s} |corr| {abs_corr('max_score', 'score_variance'):.2f} with score_variance")
+print(f"\nredundant (|corr| > {CORR_MAX} with a kept signal), dropped:")
+for n in sorted((x for x in aucs if aucs[x] >= AUC_BAR and x not in kept), key=lambda x: -aucs[x]):
+    twin = max(kept, key=lambda k: abs_corr(n, k))
+    print(f"  {n:16s} |corr| {abs_corr(n, twin):.2f} with {twin}")
+
 print(f"\nkept (distinct and discriminative): {sorted(kept)}")
 """)
 md(r"""
@@ -596,12 +607,13 @@ code(r"""
 plot_signal_separation(calibration, aucs, kept, SIGNAL_COLUMN)
 """)
 md(r"""
-Two survivors, `dense_variance` and `score_variance`, and they are *not* redundant with each other
-(raw-dense vs fused spread correlate only ~0.5), so each earns its place. One discipline to carry over:
-we select the signals on a held-out validation split and calibrate the floor below on calibration,
-holding test out until the end, so the choice generalizes past the numbers you happen to see here. The deeper
-lesson: **the winners are corpus-specific.** On your data the AUCs land differently, a signal weak
-here may be strong, and a different set may survive. The method transfers, the selection does not.
+Two survivors, `dense_variance` and `score_variance`. They correlate only ~0.5 (raw-dense vs fused
+spread), so each adds something the other misses. One discipline to carry over: this pass selects and
+calibrates on the same calibration split for one live run, so for production, select the signals on
+one split and tune the threshold on another, holding test out, and neither overfits the numbers you
+happen to see. The deeper lesson: **the winners are corpus-specific.** On your data the AUCs land
+differently, a signal weak here may be strong, and a different set may survive. The method carries
+over; the specific winners are yours to find.
 """)
 
 # ============================================================================ the gate
@@ -660,17 +672,15 @@ plot_gate(calibration, DV_FLOOR)
 md(r"""
 ### The implementation
 
-The gate the loop calls: escalate if **either** kept signal is below its floor. Its whole cost on top
-of the hybrid retrieve you already run is a single dense-only query, exactly the near-instant budget
-we set out to keep.
+The gate reads its two signals off retrievals the loop already has: `score_variance` from the hybrid
+result, `dense_variance` from one dense-only ranking. Escalate if **either** falls below its floor.
+It takes the fused result and the dense ranking as arguments, so the loop retrieves once and the gate
+adds a single dense-only query, exactly the near-instant budget we set out to keep.
 """)
 code(r"""
-def retrieval_is_weak(question):
+def retrieval_is_weak(fused, dense):
     # the tier-1 gate: escalate if EITHER kept signal is below its calibrated floor.
-    enc = embed(question)
-    dv = dense_variance(dense_ranking(question, enc=enc))
-    sv = score_variance(hybrid_search(question, enc=enc))
-    return dv < DV_FLOOR or sv < SV_FLOOR
+    return score_variance(fused) < SV_FLOOR or dense_variance(dense) < DV_FLOOR
 """)
 
 # ============================================================================ CP3
@@ -687,9 +697,9 @@ multivectors), catching term-level matches a single pooled embedding blurs away.
 Qdrant call: prefetch a dense pool, then rescore it with the ColBERT multivector.
 """)
 code(r"""
-def colbert_rerank(question, limit=TOP_K):
+def colbert_rerank(question, limit=TOP_K, enc=None):
     # Qdrant native multivector: prefetch a dense pool, rescore with ColBERT MaxSim (late interaction).
-    dense, _minicoil = embed(question)
+    dense, _minicoil = enc or embed(question)
     colbert_vecs = [v.tolist() for v in next(iter(colbert_model.query_embed(question)))]
     return client.query_points(
         COLBERT_COLLECTION,
@@ -730,9 +740,10 @@ def union_pool(pools, k=TOP_K):
                 best[c.doc_id] = c
     return sorted(best.values(), key=lambda c: c.score, reverse=True)[:k]
 
-def decompose(question, max_hops=4):
+def decompose(question, max_hops=4, hop0=None):
     # IRCoT: retrieve, ask the next missing sub-question, retrieve, union. Repeat until ENOUGH.
-    pools = [to_passages(hybrid_search(question))]
+    # hop0 lets the loop pass the hybrid retrieve it already ran, so hop 0 is not retrieved twice.
+    pools = [hop0 if hop0 is not None else to_passages(hybrid_search(question))]
     sub_queries = []
     for _ in range(max_hops - 1):
         next_q = next_subquery(question, pools, sub_queries)
@@ -814,13 +825,16 @@ def looks_multi_hop(question):
     return len(question_entities(question)) >= 2 or len(question.split()) >= 12
 
 def solve(question):
-    # the self-correcting retrieval loop: read the signal, climb only as far as the query needs.
-    if not retrieval_is_weak(question):
-        return to_passages(hybrid_search(question)), "tier 1: confident, answer from the hybrid top-3"
+    # the self-correcting retrieval loop: retrieve once, read the signal, climb only as far as needed.
+    enc = embed(question)
+    fused = hybrid_search(question, enc=enc)            # the base retrieval, reused below
+    dense = dense_ranking(question, enc=enc)            # the one extra read the gate needs
+    if not retrieval_is_weak(fused, dense):
+        return to_passages(fused), "tier 1: confident, answer from the hybrid top-3"
     if looks_multi_hop(question):
-        pool, sub_queries = decompose(question)
+        pool, sub_queries = decompose(question, hop0=to_passages(fused))
         return pool, f"tier 3: weak + multi-hop, decomposed ({len(sub_queries)} sub-question(s))"
-    return to_passages(colbert_rerank(question)), "tier 2: weak single-hop, ColBERT late-interaction"
+    return to_passages(colbert_rerank(question, enc=enc)), "tier 2: weak single-hop, ColBERT late-interaction"
 """)
 md(r"""
 Three queries, three paths from one agent. Each answer is generated from the routed top-3, so this
