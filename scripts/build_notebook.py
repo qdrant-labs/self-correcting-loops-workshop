@@ -65,9 +65,10 @@ this to your workflow.
 md(r"""
 ## Setup: run this first, confirm `Ready`
 
-Everything is pre-installed, pre-embedded, and warm on your VM. This cell wires `src/` onto the
-path, loads your keys, imports the Qdrant client + helpers, and loads the question set plus the
-calibrated gate.
+Everything is pre-installed and pre-embedded on your VM. This cell wires `src/` onto the path,
+loads your keys, imports the Qdrant client + helpers, loads the question set plus the calibrated
+gate, and **warms the embedding models** (FastEmbed fetches them from Hugging Face the first time;
+on the prebuilt VM they are already cached, so this is just a load).
 """)
 code(r"""
 import sys
@@ -101,9 +102,15 @@ api_keys_loaded = all(os.environ.get(k) for k in ("ANTHROPIC_API_KEY", "OPENAI_A
 by_id = {q["id"]: q for q in data.load_questions_mixed()}
 th = signals.load_thresholds(path=config.ARTIFACTS_DIR / "thresholds_mixed.json")  # calibrated gate
 
+# Warm the embedding models now. FastEmbed pulls them from Hugging Face on first use, so doing it
+# here means the first retrieval is instant instead of downloading mid-demo. (The corpus is
+# already indexed in Qdrant; only the query-side models load here.)
+retrieval.encode_query("warm up")     # dense (bge) + miniCOIL + BM25 query embedders
+retrieval.get_colbert_model()         # the ColBERT multivector model (tier 2)
+
 print(f"Qdrant '{config.COLLECTION}': {main_count} points  |  '{config.COLBERT_COLLECTION}': {colbert_count} points")
 print(f"dense ({config.DENSE_MODEL}) + sparse ({config.HYBRID_SPARSE_VEC}), fused with {config.FUSION_METHOD.upper()}")
-print(f"loaded {len(by_id)} questions; gate floor dense_variance < {th['dense_variance']:.3f}")
+print(f"loaded {len(by_id)} questions; embedding models warm; gate floor dense_variance < {th['dense_variance']:.3f}")
 print(f"API keys loaded: {api_keys_loaded}")
 print("\nReady" if main_count and api_keys_loaded else "\nNOT ready")
 """)

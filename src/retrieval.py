@@ -39,18 +39,30 @@ import data
 _models: dict = {}
 _client = None
 _colbert = None
+_reranker = None
 
 
 def get_models() -> dict:
+    # The query-side embedders used on every retrieve. The cross-encoder reranker is loaded
+    # separately (get_reranker_model) so the ladder's tiers never pull it.
     if not _models:
         from fastembed import SparseTextEmbedding, TextEmbedding
-        from fastembed.rerank.cross_encoder import TextCrossEncoder
 
         _models["dense"] = TextEmbedding(config.DENSE_MODEL)
         _models["bm25"] = SparseTextEmbedding(config.BM25_MODEL)
         _models["minicoil"] = SparseTextEmbedding(config.MINICOIL_MODEL)
-        _models["reranker"] = TextCrossEncoder(config.RERANKER_MODEL)
     return _models
+
+
+def get_reranker_model():
+    """Lazy, SEPARATE from get_models so only the always_rerank baseline / rerank action loads
+    the cross-encoder; the ColBERT ladder never downloads it."""
+    global _reranker
+    if _reranker is None:
+        from fastembed.rerank.cross_encoder import TextCrossEncoder
+
+        _reranker = TextCrossEncoder(config.RERANKER_MODEL)
+    return _reranker
 
 
 def get_client():
@@ -221,9 +233,8 @@ def search(
 def _rerank_candidates(query: str, pool: list[Candidate], k: int) -> list[Candidate]:
     if not pool:
         return []
-    m = get_models()
     docs = [data.doc_embed_text({"title": c.title, "text": c.text}) for c in pool]
-    scores = [_sigmoid(float(z)) for z in m["reranker"].rerank(query, docs)]
+    scores = [_sigmoid(float(z)) for z in get_reranker_model().rerank(query, docs)]
     ranked = sorted(zip(pool, scores), key=lambda cs: cs[1], reverse=True)[:k]
     return [Candidate(c.doc_id, c.title, c.text, float(s), c.supports) for c, s in ranked]
 
