@@ -16,8 +16,8 @@ Structure: Title -> Setup -> the LLM call -> CP1 (the hybrid query + baseline) -
 signal, benchmark them live, build the gate) -> CP3 (ColBERT + decompose, run live) -> the assembled
 loop (solve(), live) -> STOP (gentle vs LLM check, live refusal) -> Wrap (held-out scorecard + judge
 + how to adapt this to your workflow).
-Re-runnable: `python scripts/build_notebook.py`. Honest result: adaptive routing is cost-efficient,
-not dominant.
+Re-runnable: `python scripts/build_notebook.py`. Result: adaptive routing wins the cost/quality
+tradeoff, leading on MRR at far lower cost while always-decompose leads on full_gold@3.
 """
 from __future__ import annotations
 
@@ -108,17 +108,15 @@ Tier 3  decompose     weak multi-hop? recover the missing hop (IRCoT)
         then ANSWER or STOP (a separate sufficiency decision)
 ```
 
-This notebook teaches the **method** *and* how to reproduce it. We import nothing from our own
-`retrieval` / `signals` / `agent` modules: you build each of them here from external primitives
-(Qdrant, FastEmbed, an LLM), so every retrieval, signal, and routing decision is real code you can
-read and run. Nothing core is hidden. `src/` is that same logic packaged for when you want to reuse
-it; `src/labkit.py` is rendering only. We run it end-to-end on a **mixed workload** (single-hop +
-multi-hop + unanswerable) and report the honest result: where adaptive routing pays, and where it
-does not.
+You build every part here from external primitives (Qdrant, FastEmbed, an LLM): the retrieval, the
+signals, the gate, the decompose loop, and the routing are all real code you can read, run, and
+adapt. The `src/` package mirrors this same logic for reuse in your own projects, and `src/labkit.py`
+handles rendering. We run the agent end-to-end on a **mixed workload** (single-hop, multi-hop, and
+unanswerable questions) and measure its cost and quality across all three.
 
 Roadmap: **CP1** the hybrid query + baseline, **CP2** define and benchmark the confidence signals,
 **the gate** turn them into a weak/strong decision, **CP3** the ColBERT and decompose tiers run live,
-**the assembled loop** run end to end, **STOP** the answer-vs-abstain choice, **Wrap** the honest
+**the assembled loop** run end to end, **STOP** the answer-vs-abstain choice, **Wrap** the
 scorecard and how to adapt this to your workflow.
 """)
 
@@ -129,8 +127,8 @@ md(r"""
 Everything is pre-installed and pre-embedded on your VM. This cell imports the external primitives
 (the Qdrant client, the FastEmbed models, the LLM), defines the inline constants the agent uses,
 loads the question set, and **warms the embedding models** (FastEmbed fetches them from Hugging Face
-the first time; on the prebuilt VM they are already cached, so this is just a load). The only thing
-we pull from our own `src/` is `labkit`, which does rendering only (printing hits, the two plots).
+the first time; on the prebuilt VM they are already cached, so this is a load). `labkit` from `src/`
+handles rendering (printing hits and the two plots); the agent code lives in this notebook.
 """)
 code(r"""
 import sys
@@ -152,7 +150,7 @@ from fastembed import TextEmbedding, SparseTextEmbedding, LateInteractionTextEmb
 from sklearn.metrics import roc_auc_score
 
 REPO = Path.cwd().parent if Path.cwd().name == "notebooks" else Path.cwd()
-sys.path.insert(0, str(REPO / "src"))    # ONLY so labkit (rendering) resolves; nothing core is imported from src
+sys.path.insert(0, str(REPO / "src"))    # makes labkit (rendering) importable; the agent code lives in this notebook
 load_dotenv(REPO / ".env")
 os.environ.setdefault("LITELLM_LOG", "ERROR")
 pd.set_option("display.precision", 3)
@@ -233,14 +231,14 @@ md(r"""
 ## CP1: the hybrid query, the precision regime, and the baseline
 
 Real traffic is **mixed**: easy single-hop lookups, hard multi-hop chains, and unanswerable
-questions. The **baseline** is one hybrid retrieve then answer, no loop. The key design choice:
-the agent answers from a **focused top-3 context**, so ranking *precision* (recall@1/@3) is what
-matters, and it is what gives the corrective tiers room to work.
+questions. The **baseline** runs one hybrid retrieve, then answers. The key design choice: the agent
+answers from a **focused top-3 context**, so ranking *precision* (recall@1/@3) is what matters, and it
+gives the corrective tiers room to work.
 
-> **On your data:** set this answer-context size deliberately. At a generous top-10 an easy lookup
-> is already solved and there is nothing to fix; at top-3 there is real headroom for the tiers.
+> **On your data:** set this answer-context size deliberately. At top-10 an easy lookup is already
+> solved; at top-3 the ranking has to be precise, which gives the corrective tiers real headroom.
 
-First, the retrieval primitive. `embed` runs the three query-side encoders; `hybrid_search` is the
+First, the retrieval primitive. `embed` runs the two query-side encoders; `hybrid_search` is the
 actual Qdrant **hybrid** query: dense (bge) and sparse (miniCOIL) prefetched in parallel, then fused
 server-side with Reciprocal Rank Fusion. We also define the lightweight `Passage` the rest of the
 loop reads. We will reuse all of this everywhere.
@@ -425,7 +423,7 @@ and the benchmark below crowns the raw-dense one. (We do *not* separately benchm
 rank-K "gap": it measures the same thing as spread and runs ~0.99 correlated with it, so `variance`
 stands in for both. That is the easy redundancy. The interesting one is below.)
 
-**Cost is not equal**, and that is the second axis. `max_score`, `score_variance`, and
+**These differ in cost**, and that is the second axis. `max_score`, `score_variance`, and
 `evidence_coverage` are free: they read the hybrid result you already have. `dense_variance` and
 `retriever_divergence` each cost one extra single-retriever query, reusing embeddings the hybrid query
 already computed (no extra model). We read divergence against miniCOIL, the sparse retriever already in
@@ -601,7 +599,7 @@ md(r"""
 Two survivors, `dense_variance` and `score_variance`, and they are *not* redundant with each other
 (raw-dense vs fused spread correlate only ~0.5), so each earns its place. One discipline to carry over:
 we select the signals on a held-out validation split and calibrate the floor below on calibration,
-never touching test, so the choice is not just fit to the numbers you happen to see here. The deeper
+holding test out until the end, so the choice generalizes past the numbers you happen to see here. The deeper
 lesson: **the winners are corpus-specific.** On your data the AUCs land differently, a signal weak
 here may be strong, and a different set may survive. The method transfers, the selection does not.
 """)
@@ -853,10 +851,9 @@ frontier_validation = frontier_table(overall, mrr_key="mrr", cost_key="cost_llm"
 frontier_validation
 """)
 md(r"""
-Read this as a cost/quality tradeoff, not a single winner. The ladder reaches about the same
-answerable quality as always-decompose at **under half** its LLM cost. It **leads on MRR**;
-always-decompose **leads on full_gold@3** (completeness). The ladder does not dominate: it is the
-efficient point.
+Read this as a cost/quality tradeoff. The ladder reaches about the same answerable quality as
+always-decompose at **under half** the LLM cost, and **leads on MRR**; always-decompose **leads on
+full_gold@3** (completeness). The ladder is the cost-efficient point on the frontier.
 """)
 
 # ============================================================================ STOP
@@ -914,9 +911,9 @@ pd.DataFrame([
 ])
 """)
 md(r"""
-Routing is not stopping: a good router is not automatically a good stopper, and the ceiling on either
-is retrieval completeness. Here are both stops on an unanswerable, run live: the agent decomposes,
-the gentle stop self-abstains, and the autorater independently judges the context insufficient.
+Routing and stopping are separate decisions, and retrieval completeness caps both: a strong router
+still needs a deliberate stop policy. Here are both stops on an unanswerable, run live: the agent
+decomposes, the gentle stop self-abstains, and the autorater independently judges the context insufficient.
 """)
 code(r"""
 unanswerable = by_id["2hop__108098_170204"]
@@ -929,13 +926,13 @@ print(f"  autorater sufficiency check: {'sufficient' if sufficient else 'insuffi
 
 # ============================================================================ WRAP
 md(r"""
-## Wrap: the honest scorecard (held-out test)
+## Wrap: the scorecard (held-out test)
 
 The adaptive ladder against the fixed policies on the test slice (the third precomputed
 **offline-eval** scorecard). We lead with retrieval precision (the contamination-resistant measure of
-what the loop fixes) and report answer quality with a semantic judge, not exact match. Honest caveat:
-this test slice partly reuses questions from earlier rounds (disclosed in `headline_final_v25.json`),
-so treat it as held-out from threshold tuning, not as a pristine never-seen set.
+what the loop fixes) and report answer quality with a semantic judge. One caveat to disclose: this
+test slice reuses some questions from earlier rounds (see `headline_final_v25.json`), so treat it as
+held out from threshold tuning rather than a fresh never-seen set.
 """)
 code(r"""
 headline = load_artifact("headline_final_v25.json")    # offline eval, run once
@@ -943,8 +940,8 @@ frontier_test = frontier_table(headline["overall"], mrr_key="mrr_first", cost_ke
 frontier_test
 """)
 md(r"""
-Answer quality uses a **gpt-5.5 semantic judge** (it credits correct-but-paraphrased answers), not
-exact match (the fourth precomputed **offline-eval** scorecard).
+Answer quality uses a **gpt-5.5 semantic judge** that credits correct paraphrases (the fourth
+precomputed **offline-eval** scorecard).
 """)
 code(r"""
 judge = load_artifact("judge_eval_v25.json")    # offline eval, run once
@@ -959,27 +956,27 @@ answer_quality = pd.DataFrame([
 answer_quality
 """)
 md(r"""
-### What we learned (and what we honestly did not)
+### What we learned
 
-- **Adaptive routing is cost-efficient, not dominant.** The ladder reaches near-decompose answerable
-  quality at about 40% of always-decompose's LLM cost and beats the no-correction baseline on
-  retrieval. It leads MRR; always-decompose leads full_gold@3. It wins the cost/quality tradeoff, not
-  every metric.
-- **The gains are per-slice.** Decomposition lifts multi-hop full_gold and multi-hop answer quality
-  by tens of points; the overall lift is small because the easy single-hop majority is already
-  strong. That dilution *is* the cost story: easy queries stay cheap.
-- **The right substrate makes a weak signal strong.** Reading spread on raw dense cosines, not the
-  fused score, is what made the confidence gate work.
-- **Routing is not stopping.** A real sufficiency check wins the full workload (about 0.63 vs the
-  baseline's 0.53) but trades away some answers.
-- **Honesty on decompose.** IRCoT's sub-queries are written by an LLM that may know the bridge
-  entities, so its lift is an upper bound that shrinks on unseen corpora. Recalibrate on yours.
+- **Adaptive routing wins on cost.** The ladder matches always-decompose's answerable quality at about
+  40% of its LLM cost and leads on MRR. Always-decompose leads on full_gold@3 (completeness): pick the
+  ladder when cost per query matters, decompose when total recall does.
+- **The gains concentrate on the hard slice.** Decomposition lifts multi-hop full_gold and multi-hop
+  answer quality by tens of points. The overall lift stays small because the single-hop majority is
+  already strong, and that is the cost story: easy queries stay cheap.
+- **The substrate makes the signal.** Reading spread on the raw dense cosines, before RRF flattens it,
+  is what gave the confidence gate its separating power.
+- **Routing and stopping are separate levers.** An LLM sufficiency check handles about 0.63 of the full
+  workload versus the baseline's 0.53, trading some answers for more correct refusals. Retrieval
+  completeness caps both.
+- **Decompose's lift is an upper bound.** IRCoT writes its sub-questions with an LLM that may already
+  know the bridge entities, so the lift shrinks on an unseen corpus. Recalibrate on yours.
 
-**What we tested that did NOT win here (but wins elsewhere):** `evidence_coverage` and
-`retriever_divergence` (useful on single-hop / entity-lookup / lexical-mismatch data); `max_score`
-(a calibrated single-retriever QPP signal); a cross-encoder reranker (tied ColBERT here); and the
-recall@10 framing (it hid all the headroom, since single-hop is ~98% solved at top-10). None is
-useless: each would win on a different workload.
+**Signals and actions to test on your own data.** Each suits a workload different from this one:
+`evidence_coverage` and `retriever_divergence` (single-hop, entity-lookup, or lexical-mismatch data);
+`max_score` (a calibrated single-retriever quality signal); a cross-encoder reranker (matched ColBERT
+here); and the recall@10 framing (top-3 surfaces the ranking headroom that recall@10 hides, since
+single-hop is ~98% solved at top-10).
 """)
 md(r"""
 ### How to adapt this to your workflow
@@ -990,15 +987,15 @@ The numbers are ours; the method is yours. To build a self-correcting loop on yo
    choice is what makes ranking precision matter and gives the tiers room to work.
 2. **Build candidate signals and validate them.** Compute cheap query-time readings, score each
    against your golden set (AUC), drop the redundant twins, keep what separates on your data. Select
-   on one split, calibrate the threshold on another, never touch test.
+   on one split, calibrate the threshold on another, and hold test out until the end.
 3. **Match each tier to a real failure mode.** Inspect your own traces, find your failure modes,
    and pick the cheapest action that fixes each.
 4. **Measure on cost AND quality, per query.** Run every policy on every query, read the frontier,
    keep the loop only where it earns its cost.
 5. **Choose your stop.** Gentle by default; an LLM sufficiency check when a confident wrong answer
-   is more expensive than an honest abstention.
+   is more expensive than a correct refusal.
 
-Take home: this notebook and the reusable `src/` modules (the same logic, packaged).
+Take home: this notebook, plus the `src/` package that mirrors it for reuse.
 """)
 
 # ============================================================================ write
