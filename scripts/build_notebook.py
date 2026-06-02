@@ -142,13 +142,23 @@ def hybrid_search(question, limit=10):
     ).points
 """)
 md(r"""
-### The two kinds of query
+### Two kinds of query, and why you can't tell them apart up front
 
-- **Single-hop**: the answer lives in one passage, and the question points straight at it.
-- **Multi-hop**: the answer chains two or more passages, and only the **first** is reachable from
-  the question as written. You learn a **bridge entity** from hop 1, then ask hop 2.
+Both of these are perfectly normal things a user asks, and on the surface they look the same:
 
-A single-hop lookup: the supporting passage is right there, so the agent answers from the top-3.
+- **Simple (single-hop):** the answer sits in one passage, so a single retrieve can answer it
+  right away. *"Which continent is the Atbarah River on?"*
+- **Complex (multi-hop):** the answer is spread across passages, and the later ones are not
+  reachable from the question as written. The agent has to retrieve, read what came back, and
+  retrieve again. *"What sea washes the shores of the birthplace of Jim Wilson?"* needs the
+  birthplace before it can ask about the sea.
+
+Nothing on the surface of a question reliably says "this one needs a second hop," so you cannot
+sort them up front. That is exactly why the agent reads a cheap signal off its own retrieval (CP2)
+and escalates only when the retrieval looks weak, instead of trusting the question.
+
+A single-hop lookup first: the supporting passage is right there, so the agent answers from the
+top-3.
 """)
 code(r"""
 single = by_id["2hop__101521_42157__h0"]
