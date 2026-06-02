@@ -114,6 +114,9 @@ def _next_subquery(question: str, results, sub_queries, model=None) -> tuple[str
     return (t or None), tokens
 
 
+next_subquery = _next_subquery  # public alias: the IRCoT sub-question step, shown in the workshop notebook
+
+
 def ircot_search(question: str, k: int = config.TOP_K, max_hops: int = config.IRCOT_MAX_HOPS,
                  fusion: str | None = None, model: str | None = None, encoded=None) -> tuple[retrieval.RetrievalResult, int]:
     """IRCoT iterative decompose: retrieve the question, then up to max_hops-1 follow-up
