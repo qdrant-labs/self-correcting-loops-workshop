@@ -164,10 +164,9 @@ from labkit import (load_artifact, frontier_table, show_hits, show_run,
 COLLECTION = "musique"
 COLBERT_COLLECTION = "musique_colbert"             # dense + colbert multivector (Tier 2 showcase)
 DENSE_MODEL = "BAAI/bge-base-en-v1.5"              # 768-d dense, cosine
-BM25_MODEL = "Qdrant/bm25"                         # maximally-lexical sparse (divergence detector)
 MINICOIL_MODEL = "Qdrant/minicoil-v1"             # word-sense-aware sparse (the hybrid baseline's sparse)
 COLBERT_MODEL = "answerdotai/answerai-colbert-small-v1"
-DENSE_VEC, BM25_VEC, MINICOIL_VEC, COLBERT_VEC = "dense", "bm25", "minicoil", "colbert"
+DENSE_VEC, MINICOIL_VEC, COLBERT_VEC = "dense", "minicoil", "colbert"
 RETRIEVE_N = 50          # per-retriever prefetch depth before fusion
 TOP_K = 10               # signal / pool window
 ANSWER_K = 3             # focused passages the LLM reads to answer (the precision regime)
@@ -178,10 +177,9 @@ client = QdrantClient(url=os.environ.get("QDRANT_URL", "http://localhost:6333"),
 
 # The query-side embedders. The corpus is already indexed in Qdrant; only these query models load here.
 dense_model = TextEmbedding(DENSE_MODEL)
-bm25_model = SparseTextEmbedding(BM25_MODEL)
 minicoil_model = SparseTextEmbedding(MINICOIL_MODEL)
 colbert_model = LateInteractionTextEmbedding(COLBERT_MODEL)
-for warm in (dense_model, bm25_model, minicoil_model):
+for warm in (dense_model, minicoil_model):
     next(iter(warm.query_embed("warm up")))
 next(iter(colbert_model.query_embed("warm up")))
 
@@ -249,16 +247,15 @@ loop reads. We will reuse all of this everywhere.
 """)
 code(r"""
 def embed(text):
-    # the three query-side embeddings: dense (bge) + bm25 + miniCOIL. query_embed applies the
-    # bge query instruction and the sparse query-side weighting; Qdrant applies IDF server-side.
+    # the two query-side embeddings used everywhere: dense (bge) + miniCOIL sparse. query_embed
+    # applies the bge query instruction and the sparse query-side weighting; Qdrant applies IDF.
     dense = next(iter(dense_model.query_embed(text))).tolist()
-    bm25 = next(iter(bm25_model.query_embed(text)))
     minicoil = next(iter(minicoil_model.query_embed(text)))
-    return dense, bm25, minicoil
+    return dense, minicoil
 
 def hybrid_search(question, limit=TOP_K, enc=None):
     # Qdrant hybrid retrieval: dense + miniCOIL prefetched (top-50 each), fused server-side with RRF.
-    dense, _bm25, minicoil = enc or embed(question)
+    dense, minicoil = enc or embed(question)
     return client.query_points(
         COLLECTION,
         prefetch=[
@@ -411,48 +408,50 @@ is the lesson; the winners are corpus-specific (more on that below).
 md(r"""
 ### The candidates, by family
 
-Five families of cheap signal, each reading a different facet of one retrieval:
+Five candidates, each reading a different facet of one retrieval:
 
 | family | signal | what it reads | flags weak when | tends to matter on |
 |---|---|---|---|---|
 | height | `max_score` | top-1 fused score | low | score-calibrated single-retriever setups |
-| spread | `score_variance` | spread of the fused top-k scores | low (flat ranking) | corpora where fusion keeps score range |
-| spread | `dense_variance` | spread of the **raw dense** cosines | low (dense can't separate its hits) | most dense-retrieval corpora |
-| gap | `confidence_gap` | rank-1 minus rank-K fused score | low (bunched) | similar to `score_variance` |
-| gap | `dense_gap` | rank-1 minus rank-K raw dense cosine | low (bunched) | twin of `dense_variance` |
+| spread (fused) | `score_variance` | spread of the fused top-k scores | low (flat ranking) | corpora where fusion keeps score range |
+| spread (raw) | `dense_variance` | spread of the **raw dense** cosines | low (dense can't separate its hits) | most dense-retrieval corpora |
 | coverage | `evidence_coverage` | question entities present in the top-k text | low (text misses them) | entity-lookup / keyword data |
-| agreement | `retriever_divergence` | dense vs BM25 top-k overlap | high (they disagree) | lexical-mismatch / jargon / OOV data |
+| agreement | `retriever_divergence` | dense vs miniCOIL top-k overlap | high (they disagree) | lexical-mismatch / jargon / OOV data |
 
-**Raw dense vs fused** is the design choice that matters most. Spread and gap can be read on the
-fused RRF score or on the raw dense cosines. RRF compresses scores into ranks and throws the spread
-away, so the *fused* versions are blunt while the *raw-dense* versions keep their dynamic range. That
-is why each appears twice in the table, and why the benchmark below crowns a raw-dense signal.
+**Raw dense vs fused** is the design choice that matters most. Spread can be read on the fused RRF
+score or on the raw dense cosines. RRF compresses scores into ranks and throws the spread away, so
+the *fused* version is blunt while the *raw-dense* version keeps its dynamic range. We benchmark both,
+and the benchmark below crowns the raw-dense one. (We do *not* separately benchmark the rank-1-minus-
+rank-K "gap": it measures the same thing as spread and runs ~0.99 correlated with it, so `variance`
+stands in for both. That is the easy redundancy. The interesting one is below.)
 
-**Cost is not equal**, and that is the second axis. `max_score`, `score_variance`, `confidence_gap`,
-and `evidence_coverage` are free: they read the hybrid result you already have. `dense_variance` and
-`dense_gap` cost one extra dense-only query. `retriever_divergence` costs a **whole extra BM25
-retriever** the pipeline never otherwise runs. We still compute it once, to test it (you cannot know
-it loses until you measure), but that price means it has to clearly win to ever earn a place in the
-gate. Watch whether it does.
+**Cost is not equal**, and that is the second axis. `max_score`, `score_variance`, and
+`evidence_coverage` are free: they read the hybrid result you already have. `dense_variance` and
+`retriever_divergence` each cost one extra single-retriever query, reusing embeddings the hybrid query
+already computed (no extra model). We read divergence against miniCOIL, the sparse retriever already in
+the hybrid query, rather than loading a separate BM25; a maximally-lexical retriever like BM25 is often
+a sharper divergence detector, and is what you would reach for on data where this signal earns its
+keep.
 """)
 md(r"""
 First, the materials the signals read: we already have the fused hybrid result, so we add the two raw
-single-retriever rankings (dense and BM25) and the teaching-simple entity extractor coverage uses.
+single-retriever rankings (dense and miniCOIL) and the teaching-simple entity extractor coverage uses.
 """)
 code(r"""
 def dense_ranking(question, enc=None):
     # the RAW dense cosine ranking (a dense-only Qdrant query), pre-fusion: [(doc_id, cosine), ...].
-    dense, _bm25, _minicoil = enc or embed(question)
+    dense, _minicoil = enc or embed(question)
     pts = client.query_points(COLLECTION, query=dense, using=DENSE_VEC, limit=TOP_K, with_payload=False).points
     return [(p.id, p.score) for p in pts]
 
-def bm25_ranking(question, enc=None):
-    # the RAW BM25 ranking (a bm25-only Qdrant query), pre-fusion: [doc_id, ...].
-    _dense, bm25, _minicoil = enc or embed(question)
+def minicoil_ranking(question, enc=None):
+    # the RAW miniCOIL ranking (a sparse-only Qdrant query), pre-fusion: [doc_id, ...]. Reuses the
+    # miniCOIL embedding the hybrid query already computes, so it costs one query, not a new model.
+    _dense, minicoil = enc or embed(question)
     pts = client.query_points(
         COLLECTION,
-        query=models.SparseVector(indices=bm25.indices.tolist(), values=bm25.values.tolist()),
-        using=BM25_VEC, limit=TOP_K, with_payload=False).points
+        query=models.SparseVector(indices=minicoil.indices.tolist(), values=minicoil.values.tolist()),
+        using=MINICOIL_VEC, limit=TOP_K, with_payload=False).points
     return [p.id for p in pts]
 
 _QUESTION_STOP = {"what", "who", "whom", "whose", "where", "when", "which", "why", "how",
@@ -487,21 +486,19 @@ def question_entities(question):
     return out
 """)
 md(r"""
-Now the seven candidates, one line each (one row of the table above). `retrieve_signals` runs the
-three reads once; `all_signals` returns the lot. Note the split the table flagged: `dense_variance`
-and `dense_gap` read the **raw dense** cosines; the rest read the **fused** scores or the rankings.
+Now the five candidates, one line each (one row of the table above). `retrieve_signals` runs the
+three reads once. Note the split the table flagged: `dense_variance` reads the **raw dense** cosines;
+the rest read the **fused** scores or the rankings.
 """)
 code(r"""
 def retrieve_signals(question, enc=None):
     # one encode, three reads: the fused hybrid result + the two raw single-retriever rankings.
     enc = enc or embed(question)
-    return hybrid_search(question, enc=enc), dense_ranking(question, enc=enc), bm25_ranking(question, enc=enc)
+    return hybrid_search(question, enc=enc), dense_ranking(question, enc=enc), minicoil_ranking(question, enc=enc)
 
 def max_score(fused):       return fused[0].score                                  # height: top-1 fused score
 def score_variance(fused):  return statistics.pstdev([p.score for p in fused])     # spread of the FUSED scores
-def confidence_gap(fused):  return fused[0].score - fused[-1].score                # rank1 - rankK, fused
 def dense_variance(dense):  return statistics.pstdev([s for _, s in dense])        # spread of the RAW DENSE cosines
-def dense_gap(dense):       return dense[0][1] - dense[-1][1]                       # rank1 - rankK, raw dense
 
 def evidence_coverage(question, fused):                                            # coverage: question entities present?
     ents = question_entities(question)
@@ -510,46 +507,18 @@ def evidence_coverage(question, fused):                                         
     blob = " ".join(f"{p.payload['title']} {p.payload['text']}" for p in fused).lower()
     return sum(1 for e in ents if e in blob) / len(ents)
 
-def retriever_divergence(dense, bm25):                                             # agreement: dense vs bm25 disjointness
+def retriever_divergence(dense, sparse_ids):                                       # agreement: dense vs miniCOIL disjointness
     dense_ids = [i for i, _ in dense]
-    return 1.0 - len(set(dense_ids) & set(bm25)) / max(len(dense_ids), len(bm25))
-
-def all_signals(question, enc=None):
-    fused, dense, bm25 = retrieve_signals(question, enc)
-    return {
-        "dense_variance": dense_variance(dense),
-        "score_variance": score_variance(fused),
-        "dense_gap": dense_gap(dense),
-        "confidence_gap": confidence_gap(fused),
-        "max_score": max_score(fused),
-        "evidence_coverage": evidence_coverage(question, fused),
-        "retriever_divergence": retriever_divergence(dense, bm25),
-    }
-""")
-md(r"""
-A first look at two queries whose retrieval quality we *already know* from the gold labels (this is
-calibration data): one where all the supporting passages land in the top-3, one where they do not. The
-signals are cheap proxies for exactly that hidden quality, so the only question is whether they track
-it. We can grade them here because we have the gold; at run time we have only the signals, which is
-the whole reason to benchmark them against a golden set first.
-
-Read the spread pair first: `dense_variance` and `score_variance` are higher on the good retrieval and
-collapse on the weak one. `max_score` and `evidence_coverage` barely move, and `retriever_divergence`
-even points the wrong way here, a preview of which candidates the benchmark keeps.
-""")
-code(r"""
-demo = pd.DataFrame({
-    "good: gold in top-3":     all_signals(by_id["2hop__101521_42157__h0"]["question"]),
-    "weak: gold outside top-3": all_signals(by_id["2hop__82744_23140__h0"]["question"]),
-})
-demo
+    return 1.0 - len(set(dense_ids) & set(sparse_ids)) / max(len(dense_ids), len(sparse_ids))
 """)
 md(r"""
 **How we pick which signals to keep, computed live.** A signal earns its place only if it predicts a
-weak retrieval. We score each candidate by its **AUC** at separating good retrievals (full supporting
-set in the top-3) from weak ones (0.5 = chance, 1.0 = perfect), using `max(auc, 1 - auc)` so the
-direction does not matter. We run the signal functions over the frozen calibration split *right here*
-(about 150 questions, Qdrant-only, no LLM, roughly a minute), so the benchmark below is the real
+weak retrieval, where "weak" means the supporting set is *not* all in the top-3. We know which
+retrievals are weak here because this is calibration data with gold labels; at run time we have only
+the signals, which is the whole reason to benchmark them against a golden set first. We score each
+candidate by its **AUC** at separating good retrievals from weak ones (0.5 = chance, 1.0 = perfect),
+using `max(auc, 1 - auc)` so the direction does not matter, over the frozen calibration split right
+here (about 150 questions, Qdrant-only, no LLM, roughly a minute). The benchmark below is the real
 thing, not a cached table.
 """)
 code(r"""
@@ -561,14 +530,13 @@ cal_ids = [*cal_sel["single"], *cal_sel["multi"], *cal_sel["unanswerable"]]
 cal_questions = [by_id[i] for i in cal_ids if by_id[i].get("answerable") and by_id[i].get("gold_doc_ids")]
 
 def feature_row(q):
-    fused, dense, bm25 = retrieve_signals(q["question"])
+    fused, dense, sparse_ids = retrieve_signals(q["question"])
     gold = set(q["gold_doc_ids"])
     return {
         "full_gold_label": 1 if gold.issubset({p.id for p in fused[:ANSWER_K]}) else 0,
-        "dense_variance": dense_variance(dense), "dense_gap": dense_gap(dense),
-        "score_variance": score_variance(fused), "confidence_gap": confidence_gap(fused),
+        "dense_variance": dense_variance(dense), "score_variance": score_variance(fused),
         "max_score": max_score(fused), "evidence_coverage": evidence_coverage(q["question"], fused),
-        "divergence_bm25": retriever_divergence(dense, bm25),
+        "divergence_minicoil": retriever_divergence(dense, sparse_ids),
     }
 
 calibration = [feature_row(q) for q in cal_questions]   # ~1 min, no LLM
@@ -583,10 +551,9 @@ code(r"""
 labels = [r["full_gold_label"] for r in calibration]
 
 SIGNAL_COLUMN = {   # signal -> the feature-matrix column it reads (divergence is stored per detector)
-    "dense_variance": "dense_variance", "dense_gap": "dense_gap",
-    "score_variance": "score_variance", "confidence_gap": "confidence_gap",
+    "dense_variance": "dense_variance", "score_variance": "score_variance",
     "max_score": "max_score", "evidence_coverage": "evidence_coverage",
-    "retriever_divergence": "divergence_bm25",
+    "retriever_divergence": "divergence_minicoil",
 }
 
 def signal_auc(name):
@@ -603,9 +570,11 @@ catalog = pd.DataFrame([
 catalog
 """)
 md(r"""
-Five of the seven drop out, and the families predict why: `retriever_divergence` and
-`evidence_coverage` never clear the AUC bar, and within the spread and gap families the members are
-near-duplicates, so we keep one apiece. Both cuts, from the same live features:
+Three of the five drop out, for two different reasons. `retriever_divergence` and `evidence_coverage`
+never clear the AUC bar. `max_score` clears it, but it turns out ~0.92 correlated with `score_variance`
+on this corpus, so the two are near-duplicates and we keep the stronger one. That second cut is the one
+you could not predict in advance: height and spread are distinct ideas that just happen to move
+together here. Both cuts, from the same live features:
 """)
 code(r"""
 def abs_corr(a, b):
@@ -618,10 +587,8 @@ for n in below_bar:
     print(f"  {n:22s} AUC {aucs[n]:.2f}")
 
 print("\nredundant (|corr| > 0.85 with a signal we keep), dropped:")
-for dropped, twin in [("dense_gap", "dense_variance"), ("max_score", "score_variance"),
-                      ("confidence_gap", "score_variance")]:
-    print(f"  {dropped:14s} |corr| {abs_corr(dropped, twin):.2f} with {twin}")
-print(f"\nkept (one per non-redundant family): {sorted(kept)}")
+print(f"  {'max_score':16s} |corr| {abs_corr('max_score', 'score_variance'):.2f} with score_variance")
+print(f"\nkept (distinct and discriminative): {sorted(kept)}")
 """)
 md(r"""
 The same benchmark as a picture: each signal's value on good vs weak retrievals. Where the two boxes
@@ -631,14 +598,12 @@ code(r"""
 plot_signal_separation(calibration, aucs, kept, SIGNAL_COLUMN)
 """)
 md(r"""
-A subtlety worth pausing on: `dense_gap` actually *edges* `dense_variance` on this calibration split,
-yet we keep `dense_variance`. The two are ~0.99 correlated (the same raw-dense spread, measured two
-ways), so we keep only one, and we pick the survivor on a *separate* held-out validation split, the
-split we use to select signals (we calibrate the threshold below on calibration, and never touch
-test). Selecting on a different split than you calibrate on is exactly what stops the choice from
-overfitting the numbers you happen to see here. The deeper lesson: **the winners are
-corpus-specific.** On your data the AUCs land differently, a signal weak here may be strong, and a
-different set may survive. The method transfers, the selection does not.
+Two survivors, `dense_variance` and `score_variance`, and they are *not* redundant with each other
+(raw-dense vs fused spread correlate only ~0.5), so each earns its place. One discipline to carry over:
+we select the signals on a held-out validation split and calibrate the floor below on calibration,
+never touching test, so the choice is not just fit to the numbers you happen to see here. The deeper
+lesson: **the winners are corpus-specific.** On your data the AUCs land differently, a signal weak
+here may be strong, and a different set may survive. The method transfers, the selection does not.
 """)
 
 # ============================================================================ the gate
@@ -726,7 +691,7 @@ Qdrant call: prefetch a dense pool, then rescore it with the ColBERT multivector
 code(r"""
 def colbert_rerank(question, limit=TOP_K):
     # Qdrant native multivector: prefetch a dense pool, rescore with ColBERT MaxSim (late interaction).
-    dense, _bm25, _minicoil = embed(question)
+    dense, _minicoil = embed(question)
     colbert_vecs = [v.tolist() for v in next(iter(colbert_model.query_embed(question)))]
     return client.query_points(
         COLBERT_COLLECTION,
@@ -977,14 +942,6 @@ headline = load_artifact("headline_final_v25.json")    # offline eval, run once
 frontier_test = frontier_table(headline["overall"], mrr_key="mrr_first", cost_key="llm_calls")
 frontier_test
 """)
-code(r"""
-ci_vs_baseline = headline["ci_vs"]["always_answer"]
-print("ladder vs baseline lift (paired bootstrap, 95% CI):\n")
-for metric in ("recall@3", "full_gold@3"):
-    lift = ci_vs_baseline[metric]["lift"]
-    low, high = ci_vs_baseline[metric]["ci95"]
-    print(f"  {metric:12s} {lift:+.4f}   CI95 [{low:+.4f}, {high:+.4f}]   {'clears 0' if low > 0 else 'crosses 0'}")
-""")
 md(r"""
 Answer quality uses a **gpt-5.5 semantic judge** (it credits correct-but-paraphrased answers), not
 exact match (the fourth precomputed **offline-eval** scorecard).
@@ -1001,18 +958,13 @@ answer_quality = pd.DataFrame([
 ])
 answer_quality
 """)
-code(r"""
-jc = judge["ci_ladder"]
-print(f"ladder vs baseline:  {jc['vs_baseline']['lift']:+.3f}   CI95 {jc['vs_baseline']['ci95']}  (crosses 0, marginal)")
-print(f"ladder vs decompose: {jc['vs_decompose']['lift']:+.3f}   (decompose answers best)")
-""")
 md(r"""
 ### What we learned (and what we honestly did not)
 
 - **Adaptive routing is cost-efficient, not dominant.** The ladder reaches near-decompose answerable
   quality at about 40% of always-decompose's LLM cost and beats the no-correction baseline on
-  retrieval (CIs clear of zero). It leads MRR; always-decompose leads full_gold@3. It wins the
-  cost/quality tradeoff, not every metric.
+  retrieval. It leads MRR; always-decompose leads full_gold@3. It wins the cost/quality tradeoff, not
+  every metric.
 - **The gains are per-slice.** Decomposition lifts multi-hop full_gold and multi-hop answer quality
   by tens of points; the overall lift is small because the easy single-hop majority is already
   strong. That dilution *is* the cost story: easy queries stay cheap.
