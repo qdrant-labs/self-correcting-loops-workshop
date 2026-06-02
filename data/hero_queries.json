@@ -1,0 +1,1261 @@
+[
+  {
+    "id": "4hop1__132435_84360_334118_41330",
+    "question": "How many undergraduates are there in the university attended by the owner of the gold spike in the city where The Killers formed?",
+    "answer": "7,200",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 4,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "What city was The Killers formed in?",
+        "answer": "Las Vegas",
+        "gold_doc_id": "ec33a1a0-71ac-5552-8819-fcb9f8c96257"
+      },
+      {
+        "hop_index": 1,
+        "question": "who owns the gold spike in #1",
+        "answer": "Tony Hsieh",
+        "gold_doc_id": "039d45f5-8b17-5cb8-8312-fed55d6da69b"
+      },
+      {
+        "hop_index": 2,
+        "question": "#2 >> educated at",
+        "answer": "Harvard",
+        "gold_doc_id": "ccdc7a96-0078-57db-9348-6b01519a4b46"
+      },
+      {
+        "hop_index": 3,
+        "question": "What is the enrollment of undergraduates at #3 ?",
+        "answer": "7,200",
+        "gold_doc_id": "42e7416b-46d5-5bc7-a156-1eef5aacf905"
+      }
+    ],
+    "gold_doc_ids": [
+      "039d45f5-8b17-5cb8-8312-fed55d6da69b",
+      "42e7416b-46d5-5bc7-a156-1eef5aacf905",
+      "ccdc7a96-0078-57db-9348-6b01519a4b46",
+      "ec33a1a0-71ac-5552-8819-fcb9f8c96257"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "4hop1__30726_419844_38208_47237",
+    "question": "What is the largest cathedral in the city containing the school that educated the man who studies accents at the University of Pennsylvania?",
+    "answer": "St. Patrick's Cathedral",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 4,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Who studies the accent at the University of Pennsylvania?",
+        "answer": "William Labov",
+        "gold_doc_id": "5f282134-56cd-5d2b-b168-74e2705876c5"
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> educated at",
+        "answer": "Columbia University",
+        "gold_doc_id": "4b9dcf6b-eb22-5fef-9fe8-8c0c54c59691"
+      },
+      {
+        "hop_index": 2,
+        "question": "Where is #2 located?",
+        "answer": "New York City",
+        "gold_doc_id": "51f13e78-6e7b-51d0-a768-55896542d0d7"
+      },
+      {
+        "hop_index": 3,
+        "question": "what is the largest cathedral in #3",
+        "answer": "St. Patrick's Cathedral",
+        "gold_doc_id": "32c1efda-3008-56e4-91a8-1bffb0516950"
+      }
+    ],
+    "gold_doc_ids": [
+      "32c1efda-3008-56e4-91a8-1bffb0516950",
+      "4b9dcf6b-eb22-5fef-9fe8-8c0c54c59691",
+      "51f13e78-6e7b-51d0-a768-55896542d0d7",
+      "5f282134-56cd-5d2b-b168-74e2705876c5"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "4hop3__837568_100414_35260_54090",
+    "question": "How many regions does the mediator of the Iran-Iraq War truce recognize in the continent that contains the headquarters of Pacific National University?",
+    "answer": "53 member states",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 4,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Pacific National University >> headquarters location",
+        "answer": "Khabarovsk",
+        "gold_doc_id": "aee9997b-8cd3-5a0c-b381-7f6bd77c19f3"
+      },
+      {
+        "hop_index": 1,
+        "question": "What continent is #1 found on?",
+        "answer": "Asia",
+        "gold_doc_id": "b3285de5-1d3c-5609-a65f-3d240561bef5"
+      },
+      {
+        "hop_index": 2,
+        "question": "Who mediated the truce which ended the Iran-Iraq War?",
+        "answer": "the UN",
+        "gold_doc_id": "6164a7bf-5024-5493-bbb1-405c97315863"
+      },
+      {
+        "hop_index": 3,
+        "question": "the #3 recognises how many regions in #2",
+        "answer": "53 member states",
+        "gold_doc_id": "5a38622e-eb91-5c62-a990-56b39fca100d"
+      }
+    ],
+    "gold_doc_ids": [
+      "5a38622e-eb91-5c62-a990-56b39fca100d",
+      "6164a7bf-5024-5493-bbb1-405c97315863",
+      "aee9997b-8cd3-5a0c-b381-7f6bd77c19f3",
+      "b3285de5-1d3c-5609-a65f-3d240561bef5"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "4hop3__21483_551941_473969_24137",
+    "question": "What weekly publication in the place of death of George Townsend is issued by the employer of the Yale labor historian who advised younger historians?",
+    "answer": "Yale Herald",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 4,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Which Yale staffed labor historian advised other younger labor historians?",
+        "answer": "David Montgomery",
+        "gold_doc_id": "5c7e5377-671d-5f99-9dc9-3d150a7388d3"
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> employer",
+        "answer": "Yale University",
+        "gold_doc_id": "79500264-9812-5846-ac3e-7255fc991d16"
+      },
+      {
+        "hop_index": 2,
+        "question": "George Townsend >> place of death",
+        "answer": "New Haven",
+        "gold_doc_id": "c5b55516-44d2-54d2-810d-848ea47d18e1"
+      },
+      {
+        "hop_index": 3,
+        "question": "What weekly publication in #3 is issued by #2 ?",
+        "answer": "Yale Herald",
+        "gold_doc_id": "5088b8da-f128-5209-8028-63befa9b50cc"
+      }
+    ],
+    "gold_doc_ids": [
+      "5088b8da-f128-5209-8028-63befa9b50cc",
+      "5c7e5377-671d-5f99-9dc9-3d150a7388d3",
+      "79500264-9812-5846-ac3e-7255fc991d16",
+      "c5b55516-44d2-54d2-810d-848ea47d18e1"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "4hop1__162275_10079_503957_720028",
+    "question": "What government controls the city that is part of the province that is considered the largest base for shooting films in the country where guānjīnyuán was a currency?",
+    "answer": "PRC",
+    "answer_aliases": [
+      "CHN",
+      "People's Republic of China",
+      "China"
+    ],
+    "answerable": true,
+    "n_hops": 4,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "What is the name of the country where guānjīnyuán was a currency?",
+        "answer": "China",
+        "gold_doc_id": "f03b6b21-8585-574d-a89b-57aab96f3106"
+      },
+      {
+        "hop_index": 1,
+        "question": "What is the largest base of shooting films and TV dramas in #1 ?",
+        "answer": "Jinhua",
+        "gold_doc_id": "552b5a46-b1af-51fc-9bbd-efad5bd205b7"
+      },
+      {
+        "hop_index": 2,
+        "question": "#2 >> contains administrative territorial entity",
+        "answer": "Dongyang",
+        "gold_doc_id": "696a7399-0ecf-5b6c-b29a-d12628717b04"
+      },
+      {
+        "hop_index": 3,
+        "question": "#3 >> country",
+        "answer": "PRC",
+        "gold_doc_id": "601a5bce-5695-5ac6-992c-1e243adae723"
+      }
+    ],
+    "gold_doc_ids": [
+      "552b5a46-b1af-51fc-9bbd-efad5bd205b7",
+      "601a5bce-5695-5ac6-992c-1e243adae723",
+      "696a7399-0ecf-5b6c-b29a-d12628717b04",
+      "f03b6b21-8585-574d-a89b-57aab96f3106"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "4hop3__781532_620110_61746_261712",
+    "question": "In which country is Tuolumne, a city in the county sharing a border with Pinecrest's county in the state where Finding Dory supposedly takes place?",
+    "answer": "United States",
+    "answer_aliases": [
+      "US of A",
+      "America",
+      "United States of America",
+      "U.S.",
+      "U.S",
+      "the United States",
+      "US"
+    ],
+    "answerable": true,
+    "n_hops": 4,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Pinecrest >> located in the administrative territorial entity",
+        "answer": "Tuolumne County",
+        "gold_doc_id": "8215bbdf-17fc-5a3f-991b-24a35559321c"
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> shares border with",
+        "answer": "Stanislaus County",
+        "gold_doc_id": "e7538e5e-9fa8-5e04-852a-9ab5aba1c795"
+      },
+      {
+        "hop_index": 2,
+        "question": "where is finding dory supposed to take place",
+        "answer": "in California",
+        "gold_doc_id": "1671b6c0-e532-5cdb-9ba4-47ae85a6615e"
+      },
+      {
+        "hop_index": 3,
+        "question": "Tuolumne, #2 , #3 >> country",
+        "answer": "United States",
+        "gold_doc_id": "cc08b686-b8ad-5416-9022-3f7307335ee8"
+      }
+    ],
+    "gold_doc_ids": [
+      "1671b6c0-e532-5cdb-9ba4-47ae85a6615e",
+      "8215bbdf-17fc-5a3f-991b-24a35559321c",
+      "cc08b686-b8ad-5416-9022-3f7307335ee8",
+      "e7538e5e-9fa8-5e04-852a-9ab5aba1c795"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "4hop1__152871_84360_334118_41330",
+    "question": "What is the enrollment of undergraduates at the university attended by the owner of the gold spike in the city of origin of Andre Agassi?",
+    "answer": "7,200",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 4,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "What city is Andre Agassi from?",
+        "answer": "Las Vegas",
+        "gold_doc_id": "76c5d33e-2f64-5635-aea1-6069a4c4325f"
+      },
+      {
+        "hop_index": 1,
+        "question": "who owns the gold spike in #1",
+        "answer": "Tony Hsieh",
+        "gold_doc_id": "039d45f5-8b17-5cb8-8312-fed55d6da69b"
+      },
+      {
+        "hop_index": 2,
+        "question": "#2 >> educated at",
+        "answer": "Harvard",
+        "gold_doc_id": "ccdc7a96-0078-57db-9348-6b01519a4b46"
+      },
+      {
+        "hop_index": 3,
+        "question": "What is the enrollment of undergraduates at #3 ?",
+        "answer": "7,200",
+        "gold_doc_id": "42e7416b-46d5-5bc7-a156-1eef5aacf905"
+      }
+    ],
+    "gold_doc_ids": [
+      "039d45f5-8b17-5cb8-8312-fed55d6da69b",
+      "42e7416b-46d5-5bc7-a156-1eef5aacf905",
+      "76c5d33e-2f64-5635-aea1-6069a4c4325f",
+      "ccdc7a96-0078-57db-9348-6b01519a4b46"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "4hop1__4306_83359_48661_15069",
+    "question": "When was Eritrea annexed by the country contributing the largest troop to the peace keeping mission of the organization having as important members the US and the country falling providing with more information on Canada's army size?",
+    "answer": "1953",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 4,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "What country fell providing with more information on Canada's army size?",
+        "answer": "the Soviet Union",
+        "gold_doc_id": "7affffee-cefc-5855-9cd6-09dbcea008af"
+      },
+      {
+        "hop_index": 1,
+        "question": "the us and #1 became important members in",
+        "answer": "the United Nations",
+        "gold_doc_id": "d6a96ae8-f3c5-597e-835e-b54370bfb07a"
+      },
+      {
+        "hop_index": 2,
+        "question": "largest troop contributor to the #2 peace keeping mission",
+        "answer": "Ethiopia",
+        "gold_doc_id": "cd1fbad7-2e3f-5954-ad76-8c438cb6dd0a"
+      },
+      {
+        "hop_index": 3,
+        "question": "When was Eritrea annexed by #3 ?",
+        "answer": "1953",
+        "gold_doc_id": "f19224ef-b703-52b0-8f79-c036e90599c6"
+      }
+    ],
+    "gold_doc_ids": [
+      "7affffee-cefc-5855-9cd6-09dbcea008af",
+      "cd1fbad7-2e3f-5954-ad76-8c438cb6dd0a",
+      "d6a96ae8-f3c5-597e-835e-b54370bfb07a",
+      "f19224ef-b703-52b0-8f79-c036e90599c6"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "3hop1__131377_548096_527472",
+    "question": "What mountain range is the range that Norris Mountain is part of in the state Gibson Dam is located a part of?",
+    "answer": "Rocky Mountains",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Which state is Gibson Dam located?",
+        "answer": "Montana",
+        "gold_doc_id": "7fda8fdc-9ea6-5fa7-a28c-123c7136b461"
+      },
+      {
+        "hop_index": 1,
+        "question": "Norris Mountain (#1 ) >> part of",
+        "answer": "Lewis Range",
+        "gold_doc_id": "477d594e-9b1c-57ee-872f-5ed0bbcd7680"
+      },
+      {
+        "hop_index": 2,
+        "question": "#2 >> part of",
+        "answer": "Rocky Mountains",
+        "gold_doc_id": "4ba0097e-d4fc-54ab-8a0e-2b1f9eeeb683"
+      }
+    ],
+    "gold_doc_ids": [
+      "477d594e-9b1c-57ee-872f-5ed0bbcd7680",
+      "4ba0097e-d4fc-54ab-8a0e-2b1f9eeeb683",
+      "7fda8fdc-9ea6-5fa7-a28c-123c7136b461"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "3hop1__730980_87737_336408",
+    "question": "What is the country of citizenship of the actor who played the spouse of Ann Eliza Young on Hell on Wheels?",
+    "answer": "America",
+    "answer_aliases": [
+      "the US",
+      "U.S.",
+      "the United States",
+      "United States",
+      "US"
+    ],
+    "answerable": true,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Ann Eliza Young >> spouse",
+        "answer": "Brigham Young",
+        "gold_doc_id": "f1457cad-0744-5190-98ab-09378c1f33d8"
+      },
+      {
+        "hop_index": 1,
+        "question": "who plays #1 on hell on wheels",
+        "answer": "Gregg Henry",
+        "gold_doc_id": "67cb7108-0257-5d07-af3d-aad4f9ba366f"
+      },
+      {
+        "hop_index": 2,
+        "question": "#2 >> country of citizenship",
+        "answer": "America",
+        "gold_doc_id": "cd696444-e58b-5100-a28d-fc86f8ef526a"
+      }
+    ],
+    "gold_doc_ids": [
+      "67cb7108-0257-5d07-af3d-aad4f9ba366f",
+      "cd696444-e58b-5100-a28d-fc86f8ef526a",
+      "f1457cad-0744-5190-98ab-09378c1f33d8"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "3hop2__72459_51964_32334",
+    "question": "Are these other languages learned in the country that produces most of its own oil as popular as the language that originated in the country with the oldest navy?",
+    "answer": "totals remain relatively small in relation to the total U.S population.",
+    "answer_aliases": [
+      "the US",
+      "America",
+      "U.S.",
+      "the United States",
+      "United States",
+      "US"
+    ],
+    "answerable": true,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "where does most of the oil in the us come from",
+        "answer": "the U.S.",
+        "gold_doc_id": "6bf7f0a0-22f7-5d83-9e0d-4e62850eab08"
+      },
+      {
+        "hop_index": 1,
+        "question": "who has the oldest navy in the world",
+        "answer": "The Spanish",
+        "gold_doc_id": "8df13566-1f32-59b7-bde5-0f1727ee0972"
+      },
+      {
+        "hop_index": 2,
+        "question": "Are these other languages learned in the #1 as popular as #2 ?",
+        "answer": "totals remain relatively small in relation to the total U.S population.",
+        "gold_doc_id": "48c91684-396b-5908-976f-b942ba2bd4f1"
+      }
+    ],
+    "gold_doc_ids": [
+      "48c91684-396b-5908-976f-b942ba2bd4f1",
+      "6bf7f0a0-22f7-5d83-9e0d-4e62850eab08",
+      "8df13566-1f32-59b7-bde5-0f1727ee0972"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "3hop1__79076_43572_372338",
+    "question": "Where is the headquarters of the company that owns the Roosevelt Hotel in the state where Eternal Sunshine of the Spotless Mind was set?",
+    "answer": "Jinnah International Airport",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "where is eternal sunshine of the spotless mind set",
+        "answer": "New York",
+        "gold_doc_id": "5822d3c9-b810-57ad-90da-89d846807137"
+      },
+      {
+        "hop_index": 1,
+        "question": "who owns the roosevelt hotel in #1",
+        "answer": "Pakistan International Airlines",
+        "gold_doc_id": "ad3fccdf-a9a6-5586-ae2c-bc2c693e9eab"
+      },
+      {
+        "hop_index": 2,
+        "question": "#2 >> headquarters location",
+        "answer": "Jinnah International Airport",
+        "gold_doc_id": "fcb33f10-9f4d-5ea3-973f-e52dd0dafd6a"
+      }
+    ],
+    "gold_doc_ids": [
+      "5822d3c9-b810-57ad-90da-89d846807137",
+      "ad3fccdf-a9a6-5586-ae2c-bc2c693e9eab",
+      "fcb33f10-9f4d-5ea3-973f-e52dd0dafd6a"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "3hop1__772596_49283_632017",
+    "question": "Who is the child of the last president to be impeached in the country having Interstate 496?",
+    "answer": "Chelsea Clinton",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Interstate 496 >> country",
+        "answer": "US",
+        "gold_doc_id": "bd5de83f-89cf-5e56-9c18-b7510774c63e"
+      },
+      {
+        "hop_index": 1,
+        "question": "who was the last president of the #1 to be impeached",
+        "answer": "Bill Clinton",
+        "gold_doc_id": "08523a46-6b04-534c-a1dd-2ffba9ed47d0"
+      },
+      {
+        "hop_index": 2,
+        "question": "#2 >> child",
+        "answer": "Chelsea Clinton",
+        "gold_doc_id": "f7a69e35-5b81-55ca-b8d2-549452580d36"
+      }
+    ],
+    "gold_doc_ids": [
+      "08523a46-6b04-534c-a1dd-2ffba9ed47d0",
+      "bd5de83f-89cf-5e56-9c18-b7510774c63e",
+      "f7a69e35-5b81-55ca-b8d2-549452580d36"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "3hop1__698_669_51991",
+    "question": "The film named after the claim to be the last king of the country where Chopin was invited by the payer of his funeral is based on who?",
+    "answer": "President Idi Amin",
+    "answer_aliases": [
+      "Idi Amin"
+    ],
+    "answerable": true,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Who paid for Chopin's funeral?",
+        "answer": "Jane Stirling",
+        "gold_doc_id": "1fe12c0e-1135-5271-8251-d100a9061a1c"
+      },
+      {
+        "hop_index": 1,
+        "question": "Where did #1 invite Chopin?",
+        "answer": "Scotland",
+        "gold_doc_id": "9ea02d3e-e7ea-5fb6-a2be-c3e84155d101"
+      },
+      {
+        "hop_index": 2,
+        "question": "who was the last king of #2 based on",
+        "answer": "President Idi Amin",
+        "gold_doc_id": "a3756552-ecc4-52c4-b2a3-69d74eab22a0"
+      }
+    ],
+    "gold_doc_ids": [
+      "1fe12c0e-1135-5271-8251-d100a9061a1c",
+      "9ea02d3e-e7ea-5fb6-a2be-c3e84155d101",
+      "a3756552-ecc4-52c4-b2a3-69d74eab22a0"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "3hop1__821692_74047_484277",
+    "question": "The 1998 Tour of the official name of the country Boesingheliede is located is an instance of what?",
+    "answer": "Ronde van Nederland",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Boesingheliede >> country",
+        "answer": "Holland",
+        "gold_doc_id": "68bfc886-318c-5512-82f6-afe41c04546a"
+      },
+      {
+        "hop_index": 1,
+        "question": "what is the official name of the country sometimes known as #1",
+        "answer": "Netherlands",
+        "gold_doc_id": "6b9d4cc0-66a8-5f57-8c2e-0631078691a3"
+      },
+      {
+        "hop_index": 2,
+        "question": "1988 Tour of the #2 >> instance of",
+        "answer": "Ronde van Nederland",
+        "gold_doc_id": "e4a22263-15fc-50d9-9eae-0ceffd3ee79c"
+      }
+    ],
+    "gold_doc_ids": [
+      "68bfc886-318c-5512-82f6-afe41c04546a",
+      "6b9d4cc0-66a8-5f57-8c2e-0631078691a3",
+      "e4a22263-15fc-50d9-9eae-0ceffd3ee79c"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "3hop1__166346_9522_45098",
+    "question": "When did women get to vote in the country Fränzi Aufdenblatten's birthplace and Wengen is located?",
+    "answer": "February 1971",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Fränzi Aufdenblatten >> place of birth",
+        "answer": "Zermatt",
+        "gold_doc_id": "ce50888c-8636-5bc7-b8e0-591ef23650e7"
+      },
+      {
+        "hop_index": 1,
+        "question": "Where are the villages of Wengen and #1 located?",
+        "answer": "Switzerland",
+        "gold_doc_id": "214cc498-9e87-5831-84f6-6f67b8cdc2a1"
+      },
+      {
+        "hop_index": 2,
+        "question": "when did women get the vote in #2",
+        "answer": "February 1971",
+        "gold_doc_id": "ec9d2e5d-c70f-56e3-8c31-31934cd6356b"
+      }
+    ],
+    "gold_doc_ids": [
+      "214cc498-9e87-5831-84f6-6f67b8cdc2a1",
+      "ce50888c-8636-5bc7-b8e0-591ef23650e7",
+      "ec9d2e5d-c70f-56e3-8c31-31934cd6356b"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop"
+  },
+  {
+    "id": "2hop__352532_835780",
+    "question": "Mark A. Carleton's birthplace shares a border with which other county?",
+    "answer": "Greenbrier County",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Mark A. Carleton >> place of birth",
+        "answer": "Monroe County",
+        "gold_doc_id": "ab1c803a-3e7a-529b-bd84-9f65647fa143"
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> shares border with",
+        "answer": "Greenbrier County",
+        "gold_doc_id": "9d95e26f-03ab-5f8c-9edc-a3432a872f6b"
+      }
+    ],
+    "gold_doc_ids": [
+      "9d95e26f-03ab-5f8c-9edc-a3432a872f6b",
+      "ab1c803a-3e7a-529b-bd84-9f65647fa143"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop_2"
+  },
+  {
+    "id": "2hop__89354_53850",
+    "question": "What is the current strength of the group the Prime Minister of India is responsible to?",
+    "answer": "545",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "the priminister of india is responsible to whom",
+        "answer": "Lok Sabha",
+        "gold_doc_id": "78699b94-f39b-51e5-8d4c-6029b03803a1"
+      },
+      {
+        "hop_index": 1,
+        "question": "what is the current strength of #1",
+        "answer": "545",
+        "gold_doc_id": "63146116-5543-582d-b99f-bb38aa2c7225"
+      }
+    ],
+    "gold_doc_ids": [
+      "63146116-5543-582d-b99f-bb38aa2c7225",
+      "78699b94-f39b-51e5-8d4c-6029b03803a1"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop_2"
+  },
+  {
+    "id": "2hop__131270_86587",
+    "question": "When the state where Chessa Field is ban smoking?",
+    "answer": "December 7, 2006",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Which state is Chessa Field located?",
+        "answer": "Ohio",
+        "gold_doc_id": "e7c96218-45f7-5299-be79-564857683dda"
+      },
+      {
+        "hop_index": 1,
+        "question": "when did #1 pass the no smoking laws",
+        "answer": "December 7, 2006",
+        "gold_doc_id": "b63ed261-3720-5f6c-8602-3085a4d1b9f6"
+      }
+    ],
+    "gold_doc_ids": [
+      "b63ed261-3720-5f6c-8602-3085a4d1b9f6",
+      "e7c96218-45f7-5299-be79-564857683dda"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop_2"
+  },
+  {
+    "id": "2hop__131095_91983",
+    "question": "When do we vote for governor in the state where WJQM is located?",
+    "answer": "November 6, 2018",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "What state is WJQM located?",
+        "answer": "Wisconsin",
+        "gold_doc_id": "8312dafd-1e66-5ec8-87a3-4d28d8e0c810"
+      },
+      {
+        "hop_index": 1,
+        "question": "when do we vote for governor in #1",
+        "answer": "November 6, 2018",
+        "gold_doc_id": "9be50268-e312-5e3e-98bf-3b16bdbbabee"
+      }
+    ],
+    "gold_doc_ids": [
+      "8312dafd-1e66-5ec8-87a3-4d28d8e0c810",
+      "9be50268-e312-5e3e-98bf-3b16bdbbabee"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop_2"
+  },
+  {
+    "id": "2hop__526427_135710",
+    "question": "What word was the name of the country where Harestua is located, derived from?",
+    "answer": "north",
+    "answer_aliases": [
+      "North",
+      "N"
+    ],
+    "answerable": true,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Harestua >> country",
+        "answer": "Norway",
+        "gold_doc_id": "b5516ee8-8c99-5560-8e80-1c00feae60ad"
+      },
+      {
+        "hop_index": 1,
+        "question": "The #1 was named for whom?",
+        "answer": "north",
+        "gold_doc_id": "180209d6-eafa-5f17-a5d3-44ad2828d450"
+      }
+    ],
+    "gold_doc_ids": [
+      "180209d6-eafa-5f17-a5d3-44ad2828d450",
+      "b5516ee8-8c99-5560-8e80-1c00feae60ad"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop_2"
+  },
+  {
+    "id": "2hop__212791_71652",
+    "question": "In 2018, who won the election in the country where Bandar Mas is located?",
+    "answer": "Pakatan Harapan",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Bandar Mas >> country",
+        "answer": "Malaysia",
+        "gold_doc_id": "d79b8528-5b64-51f2-8105-b8cf40808d73"
+      },
+      {
+        "hop_index": 1,
+        "question": "who won the election in #1 in 2018",
+        "answer": "Pakatan Harapan",
+        "gold_doc_id": "a7550d7b-c5ac-5538-8986-838c680e067c"
+      }
+    ],
+    "gold_doc_ids": [
+      "a7550d7b-c5ac-5538-8986-838c680e067c",
+      "d79b8528-5b64-51f2-8105-b8cf40808d73"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop_2"
+  },
+  {
+    "id": "2hop__5831_6832",
+    "question": "What is the total surface area of the city where the Bell stamp officially released?",
+    "answer": "89.6 square miles",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "In which city was the stamp officially released?",
+        "answer": "Boston",
+        "gold_doc_id": "eb4e151c-19e1-5996-a242-93b7a9c7f1bd"
+      },
+      {
+        "hop_index": 1,
+        "question": "What is the total area of #1 ?",
+        "answer": "89.6 square miles",
+        "gold_doc_id": "5b217fb4-500a-59ca-b96c-afd6aaa19ec1"
+      }
+    ],
+    "gold_doc_ids": [
+      "5b217fb4-500a-59ca-b96c-afd6aaa19ec1",
+      "eb4e151c-19e1-5996-a242-93b7a9c7f1bd"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop_2"
+  },
+  {
+    "id": "2hop__58471_85207",
+    "question": "How many passing attempts does the winningest player in the NFL have?",
+    "answer": "at least 1,500",
+    "answer_aliases": [],
+    "answerable": true,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "who has the most wins in the nfl",
+        "answer": "Tom Brady",
+        "gold_doc_id": "875d4a68-9d68-589a-8dd2-786a9aea5557"
+      },
+      {
+        "hop_index": 1,
+        "question": "how many passing attempts does #1 have",
+        "answer": "at least 1,500",
+        "gold_doc_id": "72ea93ee-bee2-5703-96dd-3c611a834900"
+      }
+    ],
+    "gold_doc_ids": [
+      "72ea93ee-bee2-5703-96dd-3c611a834900",
+      "875d4a68-9d68-589a-8dd2-786a9aea5557"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "multihop_2"
+  },
+  {
+    "id": "2hop__150889_653391",
+    "question": "Who founded the publisher of Adventures of Tron?",
+    "answer": "Elliot Handler",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "What is the name of the publisher of Adventures of Tron?",
+        "answer": "Mattel",
+        "gold_doc_id": null
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> founded by",
+        "answer": "Elliot Handler",
+        "gold_doc_id": null
+      }
+    ],
+    "gold_doc_ids": [],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "2hop__7104_718961",
+    "question": "What award did the star represented by Lew Wasserman receive?",
+    "answer": "Academy Honorary Award",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "What star did Lew Wasserman represent?",
+        "answer": "James Stewart",
+        "gold_doc_id": null
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> award received",
+        "answer": "Academy Honorary Award",
+        "gold_doc_id": null
+      }
+    ],
+    "gold_doc_ids": [],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "3hop1__75023_58494_56363",
+    "question": "What is the legal age for consent in the US state having captain miller in saving private Ryan in The Terminal?",
+    "answer": "17",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "who is captain miller in saving private ryan",
+        "answer": "Tom Hanks",
+        "gold_doc_id": null
+      },
+      {
+        "hop_index": 1,
+        "question": "where is #1 from in the terminal",
+        "answer": "New York",
+        "gold_doc_id": null
+      },
+      {
+        "hop_index": 2,
+        "question": "what is the legal age for consent in #2",
+        "answer": "17",
+        "gold_doc_id": "4590a13b-11c9-57cf-8c08-db8f17b4f2f9"
+      }
+    ],
+    "gold_doc_ids": [
+      "4590a13b-11c9-57cf-8c08-db8f17b4f2f9"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "2hop__345332_529125",
+    "question": "What is the capital of the county where Hathaways Mountain Pines is located?",
+    "answer": "San Andreas",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Hathaways Mountain Pines >> located in the administrative territorial entity",
+        "answer": "Calaveras County",
+        "gold_doc_id": "e27044c9-f3dd-5ee8-ac79-8214dd33c424"
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> capital",
+        "answer": "San Andreas",
+        "gold_doc_id": null
+      }
+    ],
+    "gold_doc_ids": [
+      "e27044c9-f3dd-5ee8-ac79-8214dd33c424"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "4hop3__752182_280480_160165_606586",
+    "question": "In which country is Logan, a city in the county sharing a border with Pleasant Ridge Township's county in the state where German is the largest ancestry group?",
+    "answer": "U.S.",
+    "answer_aliases": [
+      "US of A",
+      "America",
+      "U.S",
+      "the United States",
+      "the U.S.",
+      "United States",
+      "US"
+    ],
+    "answerable": false,
+    "n_hops": 4,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Pleasant Ridge Township >> located in the administrative territorial entity",
+        "answer": "Barry County",
+        "gold_doc_id": null
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> shares border with",
+        "answer": "Lawrence County",
+        "gold_doc_id": null
+      },
+      {
+        "hop_index": 2,
+        "question": "Where is German the largest ancestry group?",
+        "answer": "Missouri",
+        "gold_doc_id": "b42e84ba-2853-5bcb-bcb6-b11a544468b9"
+      },
+      {
+        "hop_index": 3,
+        "question": "Logan, #2 , #3 >> country",
+        "answer": "U.S.",
+        "gold_doc_id": "a11788ba-1946-5f7b-b9c8-eb05ce9817ec"
+      }
+    ],
+    "gold_doc_ids": [
+      "a11788ba-1946-5f7b-b9c8-eb05ce9817ec",
+      "b42e84ba-2853-5bcb-bcb6-b11a544468b9"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "3hop1__326177_58005_85523",
+    "question": "When did the neighboring country of where Deoksancheon is located conduct its first nuclear test?",
+    "answer": "October 9, 2006",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Deoksancheon >> country",
+        "answer": "South Korea",
+        "gold_doc_id": "ca468d60-c3d1-5a94-872a-33ee9da7f4c6"
+      },
+      {
+        "hop_index": 1,
+        "question": "what are the neighboring countries of #1",
+        "answer": "North Korea",
+        "gold_doc_id": "7ee3f19d-7783-56cf-a1f5-0d89e97a134d"
+      },
+      {
+        "hop_index": 2,
+        "question": "when did #2 conduct its first nuclear test",
+        "answer": "October 9, 2006",
+        "gold_doc_id": null
+      }
+    ],
+    "gold_doc_ids": [
+      "7ee3f19d-7783-56cf-a1f5-0d89e97a134d",
+      "ca468d60-c3d1-5a94-872a-33ee9da7f4c6"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "2hop__859866_777968",
+    "question": "What is the capitol of the province where Shaghat is located?",
+    "answer": "Kapan",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Shaghat >> located in the administrative territorial entity",
+        "answer": "Syunik Province",
+        "gold_doc_id": null
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> capital",
+        "answer": "Kapan",
+        "gold_doc_id": null
+      }
+    ],
+    "gold_doc_ids": [],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "2hop__26571_36842",
+    "question": "When did the country that continued to manage its own religious and regional political affairs while under Mongol rule, become part of Qing China?",
+    "answer": "mid-18th century",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Who managed religious and regional political affairs?",
+        "answer": "Tibet",
+        "gold_doc_id": "9e7f8d19-558b-5ed2-ac91-5514f1590775"
+      },
+      {
+        "hop_index": 1,
+        "question": "When did #1 become part of Qing China?",
+        "answer": "mid-18th century",
+        "gold_doc_id": null
+      }
+    ],
+    "gold_doc_ids": [
+      "9e7f8d19-558b-5ed2-ac91-5514f1590775"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "2hop__136763_92216",
+    "question": "What is the new tallest building in the city where the TV show Sliders was set?",
+    "answer": "Salesforce Tower",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Which place is Sliders in?",
+        "answer": "San Francisco",
+        "gold_doc_id": null
+      },
+      {
+        "hop_index": 1,
+        "question": "what is the new tallest building in #1",
+        "answer": "Salesforce Tower",
+        "gold_doc_id": null
+      }
+    ],
+    "gold_doc_ids": [],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "2hop__359390_332063",
+    "question": "What county shares a border with another county, where Green Township can be found?",
+    "answer": "Franklin County",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Green Township >> located in the administrative territorial entity",
+        "answer": "Clinton County",
+        "gold_doc_id": null
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> shares border with",
+        "answer": "Franklin County",
+        "gold_doc_id": null
+      }
+    ],
+    "gold_doc_ids": [],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "2hop__203819_49441",
+    "question": "Who is the father of Blair's child in season 5 of the series Father and the Bride is an episode of?",
+    "answer": "Louis Grimaldi",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 2,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Father and the Bride >> part of the series",
+        "answer": "Gossip Girl",
+        "gold_doc_id": null
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 season 5 blair pregnant who's the father",
+        "answer": "Louis Grimaldi",
+        "gold_doc_id": null
+      }
+    ],
+    "gold_doc_ids": [],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  },
+  {
+    "id": "3hop1__118580_691688_4653",
+    "question": "The city where Black Journal's director died was conquered in what year?",
+    "answer": "1870",
+    "answer_aliases": [],
+    "answerable": false,
+    "n_hops": 3,
+    "hops": [
+      {
+        "hop_index": 0,
+        "question": "Who was responsible for the direction of Black Journal?",
+        "answer": "Mauro Bolognini",
+        "gold_doc_id": "91fd2fa9-f0df-542d-89ad-f17b441abcd6"
+      },
+      {
+        "hop_index": 1,
+        "question": "#1 >> place of death",
+        "answer": "Rome",
+        "gold_doc_id": "00c7ce7b-d5af-532b-ac42-cf8159e1dbbb"
+      },
+      {
+        "hop_index": 2,
+        "question": "In what year was #2 conquered?",
+        "answer": "1870",
+        "gold_doc_id": null
+      }
+    ],
+    "gold_doc_ids": [
+      "00c7ce7b-d5af-532b-ac42-cf8159e1dbbb",
+      "91fd2fa9-f0df-542d-89ad-f17b441abcd6"
+    ],
+    "split": "hero",
+    "is_hero": true,
+    "archetype": "stop"
+  }
+]

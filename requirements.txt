@@ -1,0 +1,29 @@
+# Self-Correcting Agentic Retrieval Loops - workshop dependencies
+# Python 3.12. Install:  uv pip install -r requirements.txt
+# Loose floors below; the pinned VM-image set is frozen to requirements.lock.txt.
+
+# --- Retrieval + embeddings (all local, ONNX via FastEmbed) ---
+qdrant-client>=1.12          # Query API (Prefetch + FusionQuery), named vectors
+fastembed>=0.5               # dense (bge-base), sparse bm25 + miniCOIL, TextCrossEncoder reranker
+
+# --- Cross-provider LLM routing ---
+litellm>=1.55                # Claude (agent) + GPT (judge) behind one interface
+anthropic                    # Claude SDK (the agent, via LiteLLM)
+openai>=1.50                 # gpt-5.5 judge
+
+# --- Datasets + IR / answer eval ---
+datasets>=2.19               # MuSiQue (primary), FRAMES / BRIGHT (generalization) from HuggingFace
+ranx>=0.3                    # IR metrics: recall@k, nDCG@k
+scikit-learn                 # AUC / ROC / calibration
+pandas
+numpy
+
+# --- Notebook + visualization ---
+jupyter
+ipykernel
+matplotlib
+seaborn                      # correlation heatmap, ROC plots
+
+# --- Utilities ---
+python-dotenv
+tqdm

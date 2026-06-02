@@ -1,0 +1,19 @@
+# Qdrant for the Self-Correcting Agentic Retrieval Loops workshop.
+# Start:  docker compose up -d
+# Health: curl -s http://localhost:6333/healthz
+#
+# Pinned to a specific tag for the VM image (reproducibility). The build records
+# the exact resolved version in the README after first pull.
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.18.0
+    container_name: scl-qdrant
+    ports:
+      - "6333:6333"   # REST API + web dashboard (http://localhost:6333/dashboard)
+      - "6334:6334"   # gRPC
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: unless-stopped
+
+volumes:
+  qdrant_storage:

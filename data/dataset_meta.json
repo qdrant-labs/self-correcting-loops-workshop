@@ -1,0 +1,33 @@
+{
+  "primary_dataset": "bdsaglam/musique",
+  "dataset_config": "default",
+  "source_split": "train",
+  "note": "MuSiQue locked as primary before tuning. Splits drawn from MuSiQue train, seeded + disjoint; distinct jobs.",
+  "seed": 42,
+  "n_corpus_docs": 22808,
+  "n_questions_total": 1886,
+  "split_sizes": {
+    "calibration": 556,
+    "validation": 552,
+    "test": 742,
+    "hero": 36
+  },
+  "answerable_by_split": {
+    "calibration": 450,
+    "validation": 449,
+    "test": 601,
+    "hero": 24
+  },
+  "unanswerable_by_split": {
+    "calibration": 106,
+    "validation": 103,
+    "test": 141,
+    "hero": 12
+  },
+  "hop_distribution": {
+    "2": 1334,
+    "3": 447,
+    "4": 105
+  },
+  "skipped_answerable_no_gold": 0
+}
