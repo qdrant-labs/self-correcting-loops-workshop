@@ -1,8 +1,8 @@
 # Building Self-Correcting Agentic Retrieval Loops
 
 A hands-on workshop. You start from a prebuilt Qdrant-powered retrieval agent and
-make it **self-evaluating**: it reads cheap in-loop signals about its own retrieval,
-then climbs a **cost-escalation ladder** only as far as each query needs.
+make it **self-correcting**: it retrieves once, evaluates the evidence with cheap
+signals, then invokes more expensive retrieval steps only when needed.
 
 ```
 Tier 1  answer      - confident? answer now from a focused top-3 (the cheap path)
@@ -11,18 +11,16 @@ Tier 3  decompose   - weak multi-hop? recover the missing hop (IRCoT)
         then ANSWER or STOP (a separate sufficiency decision)
 ```
 
-The lesson is a **method**, not a recipe: build cheap signals, validate which ones
-actually predict bad retrieval on *your* data, route each query to the cheapest
-sufficient action, and measure whether it helped once **cost and latency** are
-counted. We run it end to end on a **mixed workload** (single-hop + multi-hop +
-unanswerable) and report the honest result, including where adaptive routing does not
-win.
+The lesson is a **method**, not a recipe: define what good retrieval means, build cheap
+signals, validate which ones predict weak evidence on *your* data, route each query to
+the cheapest sufficient action, and measure whether it helped once **cost and latency**
+are counted. The lab uses a **mixed workload**: single-hop, multi-hop, and
+unanswerable questions.
 
-- **The lab:** [`notebooks/lab.ipynb`](notebooks/lab.ipynb) - the through-line (CP1 -> CP2 -> CP3 -> STOP -> wrap).
+- **The lab:** [`notebooks/lab.ipynb`](notebooks/lab.ipynb) - CP1 concepts/baseline, CP2 metrics/signals/gate, CP3 corrective loop + STOP, then wrap.
 - **Intro deck outline:** [`deck/intro_outline.md`](deck/intro_outline.md).
 - **Results summary:** [`briefing.html`](briefing.html).
 - **Docs tutorial outline:** [`tutorials/in-loop-evals-OUTLINE.md`](tutorials/in-loop-evals-OUTLINE.md).
-- **Public registration copy:** [`agenda.md`](agenda.md).
 
 On the workshop VM everything below is pre-installed, pre-embedded, and warm: no
 setup in the room. These instructions reproduce that state from a clean clone.
@@ -77,14 +75,13 @@ run the Setup cell; it should print `Ready`.
 All embedding and reranking is local (FastEmbed ONNX), so query-time encoding is free
 and offline; only the agent, the stop autorater, and the judge hit the network.
 
-## The mixed workload and the precision regime
+## The mixed workload and answer context
 
-The agent answers from a **focused top-3** context, so ranking *precision*
-(recall@1/@3, MRR) is the metric that matters, not recall@10. At a generous top-10 the
-single-hop lookups are already ~98% solved and there is nothing to fix; at top-3 there
-is real headroom on both single-hop precision (the ColBERT rung) and multi-hop recall
-(the decompose rung). "Good retrieval" = the gold supporting passages land in the
-top-3; the native unanswerables drive the STOP decision.
+The agent answers from a **top-3 answer context**: the LLM only reads the first three
+retrieved passages. That makes ranking quality visible. In the notebook, "good
+retrieval" means the needed supporting passages land in that top-3 window; weak
+retrieval means the answer context is missing needed evidence. Native unanswerables
+drive the STOP decision.
 
 ## Reproducibility
 
@@ -95,9 +92,9 @@ Everything needed to rebuild is in the repo:
   dataset metadata. The collections in step 3 are built directly from these files.
 - `artifacts/mixed_manifest.json` - the **frozen** mixed-workload population (seeded;
   every question id per split is pinned), so the eval set is reproducible by id.
-- `artifacts/*.json` - the precomputed eval outputs the notebook reads (the lab runs
-  with no live eval, no re-embedding). Thresholds are calibrated per dataset and live
-  in `thresholds_mixed.json`, never hard-coded as portable.
+- `artifacts/*.json` - frozen manifests and precomputed workload-level scorecards used
+  by the STOP and Wrap sections. The signal benchmark in the notebook runs live over
+  the calibration split.
 
 To regenerate the **dataset itself** from MuSiQue (needs HuggingFace access):
 `scripts/prepare_data.py` then `scripts/prepare_mixed.py`. To regenerate the eval
@@ -107,7 +104,7 @@ agent/judge LLMs).
 ## Repo layout
 
 ```
-notebooks/lab.ipynb    # the lab: CP1 -> CP2 -> CP3 -> STOP -> wrap
+notebooks/lab.ipynb    # the lab: CP1 concepts -> CP2 gate -> CP3 loop/STOP -> wrap
 docker-compose.yml     # Qdrant
 requirements.txt       # loose deps; requirements.lock.txt has exact pins
 src/                   # reusable modules: config, data, retrieval, signals, policy, agent, trace, eval
