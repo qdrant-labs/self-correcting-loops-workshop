@@ -110,40 +110,46 @@ def plot_signal_separation(features, signal_auc, kept, column):
     plt.show()
 
 
-def plot_gate(features, floor):
-    """Left: where the floor sits on the dense_variance distribution. Right: precision/recall vs floor."""
-    good = [r["dense_variance"] for r in features if r["full_gold_label"] == 1]
-    weak = [r["dense_variance"] for r in features if r["full_gold_label"] == 0]
-    values = np.array([r["dense_variance"] for r in features])
+_GATE_SIGNAL_DESC = {
+    "dense_variance": "spread of the raw dense scores",
+    "score_variance": "spread of the fused RRF scores",
+}
+
+
+def plot_gate(features, floor, signal="dense_variance", desc=None):
+    """The chosen signal's good-vs-weak distributions, with the floor and what it buys
+    (recall = weak caught; escalation = share of all queries sent past tier 1).
+    Defaults to dense_variance; pass signal="score_variance" + SV_FLOOR for the other gate."""
+    desc = desc or _GATE_SIGNAL_DESC.get(signal, signal)
+    good = [r[signal] for r in features if r["full_gold_label"] == 1]
+    weak = [r[signal] for r in features if r["full_gold_label"] == 0]
+    values = np.array([r[signal] for r in features])
     is_weak = np.array([r["full_gold_label"] == 0 for r in features])
 
-    fig, (ax_dist, ax_cal) = plt.subplots(1, 2, figsize=(13, 4.4))
-    bins = np.linspace(0, values.max(), 26)
-    ax_dist.hist(good, bins=bins, alpha=0.6, color=GOOD, label="good (full_gold present)")
-    ax_dist.hist(weak, bins=bins, alpha=0.6, color=WEAK, label="weak (full_gold missing)")
-    ax_dist.axvline(floor, color="black", ls="--", lw=1.6, label=f"gate floor = {floor:.3f}")
-    ax_dist.set_xlabel("dense_variance (spread of the raw dense scores)")
-    ax_dist.set_ylabel("queries")
-    ax_dist.set_title("What the gate sees: low spread predicts weak retrieval")
-    ax_dist.legend(fontsize=8)
+    if not values.min() <= floor <= values.max():   # mismatched signal/floor -> fail loud, not a 100% plot
+        raise ValueError(
+            f"floor {floor:.3f} is outside the {signal} range [{values.min():.3f}, {values.max():.3f}]; "
+            f"pass the matching signal, e.g. plot_gate(..., SV_FLOOR, signal='score_variance')."
+        )
 
-    sweep = np.linspace(values.min(), np.percentile(values, 95), 60)
-    precision, recall, escalation = [], [], []
-    for t in sweep:
-        predicted_weak = values < t
-        tp = np.sum(predicted_weak & is_weak)
-        fp = np.sum(predicted_weak & ~is_weak)
-        fn = np.sum(~predicted_weak & is_weak)
-        precision.append(tp / (tp + fp) if tp + fp else np.nan)
-        recall.append(tp / (tp + fn) if tp + fn else 0.0)
-        escalation.append(predicted_weak.mean())
-    ax_cal.plot(sweep, precision, color=ACCENT, label="precision")
-    ax_cal.plot(sweep, recall, color="#1c7ed6", label="recall")
-    ax_cal.plot(sweep, escalation, color="#9aa0a6", ls=":", label="escalation rate")
-    ax_cal.axvline(floor, color="black", ls="--", lw=1.6, label=f"chosen floor = {floor:.3f}")
-    ax_cal.set_xlabel("gate floor (dense_variance threshold)")
-    ax_cal.set_ylabel("rate")
-    ax_cal.set_title("Calibrating the floor: precision / recall tradeoff")
-    ax_cal.legend(fontsize=8)
+    below = values < floor
+    recall = np.sum(below & is_weak) / max(np.sum(is_weak), 1)   # of weak retrievals, how many fall below the floor
+    escalation = below.mean()                                    # of all queries, how many fall below the floor
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    bins = np.linspace(0, values.max(), 26)
+    ax.hist(good, bins=bins, alpha=0.6, color=GOOD, label="good (full_gold present)")
+    ax.hist(weak, bins=bins, alpha=0.6, color=WEAK, label="weak (full_gold missing)")
+    ax.axvspan(0, floor, color="black", alpha=0.06, label="escalate (below the floor)")
+    ax.axvline(floor, color="black", ls="--", lw=1.6, label=f"gate floor = {floor:.3f}")
+
+    ax.set_title(
+        "What the gate sees: low spread predicts weak retrieval\n"
+        f"{signal} floor {floor:.3f}  ->  catches {recall:.0%} of weak retrievals, escalates {escalation:.0%} of all queries",
+        fontsize=11,
+    )
+    ax.set_xlabel(f"{signal}  ({desc})")
+    ax.set_ylabel("queries")
+    ax.legend(fontsize=8, loc="upper right")
     fig.tight_layout()
     plt.show()

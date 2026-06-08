@@ -7,7 +7,7 @@ qdrant-client>=1.12          # Query API (Prefetch + FusionQuery), named vectors
 fastembed>=0.5               # dense (bge-base) + miniCOIL sparse + ColBERT late interaction
 
 # --- LLM routing (Claude via LiteLLM) ---
-litellm>=1.55                # routes the agent + STOP autorater behind one interface
+litellm>=1.55                # provider-agnostic LLM calls - swap model= to use your own LLM
 anthropic                    # Claude SDK (the agent, via LiteLLM)
 
 # --- Dataset build + notebook metrics ---
