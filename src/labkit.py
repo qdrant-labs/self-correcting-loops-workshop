@@ -65,13 +65,18 @@ def frontier_table(metrics_by_policy, mrr_key, cost_key):
     rows = []
     for policy_name in ("always_answer", "always_colbert", "always_decompose", "ladder"):
         m = metrics_by_policy[policy_name]
-        rows.append({
+        row = {
             "policy": policy_name.replace("_", "-"),
             "recall@3": m["recall@3"],
             "full_gold@3": m["full_gold@3"],
             "MRR": m[mrr_key],
             "LLM calls/query": m[cost_key],
-        })
+        }
+        if "avg_latency_s" in m:
+            row["avg routing latency (s)"] = m["avg_latency_s"]
+        elif "avg_latency_ms" in m:
+            row["avg routing latency (s)"] = round(m["avg_latency_ms"] / 1000, 3)
+        rows.append(row)
     return pd.DataFrame(rows)
 
 

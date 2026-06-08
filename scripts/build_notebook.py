@@ -136,6 +136,7 @@ import litellm
 from qdrant_client import QdrantClient, models
 from fastembed import TextEmbedding, SparseTextEmbedding, LateInteractionTextEmbedding
 from sklearn.metrics import roc_auc_score
+from IPython.display import display
 
 REPO = Path.cwd().parent if Path.cwd().name == "notebooks" else Path.cwd()
 sys.path.insert(0, str(REPO / "src"))    # makes labkit (rendering) importable; the agent code lives in this notebook
@@ -713,9 +714,8 @@ def union_pool(pools, k=TOP_K):
                 best[c.doc_id] = c
     return sorted(best.values(), key=lambda c: c.score, reverse=True)[:k]
 
-def decompose(question, max_hops=4, hop0=None):
-    # IRCoT: retrieve, ask the next missing sub-question, retrieve, union. Repeat until ENOUGH.
-    # hop0 lets the loop pass the hybrid retrieve it already ran, so hop 0 is not retrieved twice.
+def decompose_with_trace(question, max_hops=4, hop0=None):
+    # IRCoT with trace: keep each hop's query and passage pool so we can inspect the path.
     pools = [hop0 if hop0 is not None else to_passages(hybrid_search(question))]
     sub_queries = []
     for _ in range(max_hops - 1):
@@ -724,7 +724,12 @@ def decompose(question, max_hops=4, hop0=None):
             break
         sub_queries.append(next_q)
         pools.append(to_passages(hybrid_search(next_q)))
-    return union_pool(pools, TOP_K), sub_queries
+    return union_pool(pools, TOP_K), sub_queries, pools
+
+def decompose(question, max_hops=4, hop0=None):
+    # Normal call site: return just the final pool and the generated sub-questions.
+    pool, sub_queries, _pools = decompose_with_trace(question, max_hops=max_hops, hop0=hop0)
+    return pool, sub_queries
 
 multi = by_id["2hop__615262_131886"]
 gold = multi["gold_doc_ids"]
@@ -815,34 +820,49 @@ md(r"""
 
 Routing asks, "Should I spend more retrieval?" STOP asks, "Should I answer at all?"
 
-The default is gentle: the answer generator either answers or says `INSUFFICIENT_CONTEXT`. For
-workloads where a confident wrong answer is expensive, add a small LLM sufficiency check. It catches
-more unanswerables, but it can also over-refuse answerable questions.
+The default **gentle stop** is built into `generate_answer()`: the answer prompt says "use only this
+context; if it is not enough, return `INSUFFICIENT_CONTEXT`." No extra model call is made. This keeps
+answerable questions flowing, but it relies on the answer model to notice missing evidence.
+
+The stricter option is a separate **sufficiency judge**. It reads the same top-3 answer context and
+answers one question: does this context contain every fact needed to answer? It catches more
+unanswerables, but it can also over-refuse answerable questions.
 """)
 
 code(r"""
 SUFFICIENCY_SYSTEM = (
-    "You judge whether the provided context contains ENOUGH information to answer the "
-    "question with certainty. First decompose the question into the facts it requires; "
-    "the context is SUFFICIENT only if EVERY required fact is explicitly present in the "
-    "context. Use ONLY the context, not outside knowledge. If any required fact is "
-    'missing, it is insufficient. Reply ONLY with compact JSON: {"sufficient": true|false}.'
+    "Judge whether the provided context contains enough information to answer the question. "
+    "Use ONLY the context. Reply with exactly one word: SUFFICIENT or INSUFFICIENT."
 )
 
 def sufficiency_judge(question, passages):
-    # the STOP autorater: does the retrieved context contain every fact the question requires?
+    # Strict STOP autorater: is every fact needed by the question present in the answer context?
     if not passages:
         return False
-    ctx = "\n".join(f"[{i}] {c.title}. {(c.text or '')[:600]}" for i, c in enumerate(passages, 1))
-    user = f"Question: {question}\n\nContext:\n{ctx}\n\nIs the context sufficient to answer the question?"
+
+    context = "\n".join(
+        f"[{i}] {c.title}. {(c.text or '')[:600]}"
+        for i, c in enumerate(passages, 1)
+    )
+    user = (
+        f"Question:\n{question}\n\n"
+        f"Context:\n{context}\n\n"
+        "Can the question be answered completely from this context? "
+        "Reply with exactly one word: SUFFICIENT or INSUFFICIENT."
+    )
+
     try:
-        text = ask_llm(SUFFICIENCY_SYSTEM, user, max_tokens=512, model=FAST_MODEL)
-        m = re.search(r'"?sufficient"?\s*[:=]\s*"?(true|false)"?', text, re.I)
-        if m:
-            return m.group(1).lower() == "true"
-        return bool(json.loads(text[text.find("{"): text.rfind("}") + 1]).get("sufficient"))
-    except Exception:    # default to sufficient (do not over-abstain) on a parse/API failure
+        text = ask_llm(SUFFICIENCY_SYSTEM, user, max_tokens=20, model=FAST_MODEL)
+    except Exception:
+        # On API failure, keep the gentle-stop behavior rather than adding a false refusal.
         return True
+
+    decision_words = re.findall(r"[A-Z]+", (text or "").upper())
+    if "INSUFFICIENT" in decision_words:
+        return False
+    if "SUFFICIENT" in decision_words:
+        return True
+    return True
 """)
 
 md(r"""
@@ -867,17 +887,54 @@ pd.DataFrame([
 """)
 
 md(r"""
-Here is one unanswerable run live. The route can still retrieve and decompose, but STOP makes the
-final answer-or-abstain decision.
+Here is one unanswerable run live. This traces the whole path: the first retrieval, the signal gate,
+the decompose sub-questions, the final answer context, and both STOP decisions.
 """)
 
 code(r"""
 unanswerable = by_id["2hop__108098_170204"]
-pool, route = solve(unanswerable["question"])
-gentle = generate_answer(unanswerable["question"], pool)
-sufficient = sufficiency_judge(unanswerable["question"], pool[:ANSWER_K])
-show_run(unanswerable["question"], route, gentle, pool, [])
-print(f"  autorater sufficiency check: {'sufficient' if sufficient else 'insufficient -> abstain'}")
+question = unanswerable["question"]
+
+print(f"Q: {question}\n")
+
+enc = embed(question)
+fused = hybrid_search(question, enc=enc)
+dense = dense_ranking(question, enc=enc)
+weak = retrieval_is_weak(fused, dense)
+
+print("Step 1 - baseline hybrid retrieve:")
+show_hits(fused, [], k=ANSWER_K)
+print("Signal gate:")
+print(f"  dense_variance = {dense_variance(dense):.5f}  floor = {DV_FLOOR:.5f}")
+print(f"  score_variance = {score_variance(fused):.5f}  floor = {SV_FLOOR:.5f}")
+print(f"  decision        = {'weak -> escalate' if weak else 'strong -> answer now'}")
+
+if weak and looks_multi_hop(question):
+    pool, sub_queries, hop_pools = decompose_with_trace(question, hop0=to_passages(fused))
+    route = f"tier 3: weak + multi-hop, decomposed ({len(sub_queries)} sub-question(s))"
+    for hop_idx, sub_question in enumerate(sub_queries, start=2):
+        print(f"\nStep {hop_idx} - decomposer asks:")
+        print(f"  {sub_question}")
+        print("retrieved passages:")
+        show_hits(hop_pools[hop_idx - 1], [], k=ANSWER_K)
+    print(f"\nDecompose result: stopped after {len(sub_queries)} sub-question(s); pooled the evidence.")
+elif weak:
+    pool = to_passages(colbert_rerank(question, enc=enc))
+    route = "tier 2: weak single-hop, ColBERT late-interaction"
+else:
+    pool = to_passages(fused)
+    route = "tier 1: confident, answer from the hybrid top-3"
+
+print(f"\nRoute: {route}")
+print("\nFinal answer context:")
+show_hits(pool, [], k=ANSWER_K)
+
+gentle = generate_answer(question, pool)
+sufficient = sufficiency_judge(question, pool[:ANSWER_K])
+
+print("\nSTOP decisions:")
+print(f"  gentle stop       = {'abstain' if gentle == 'INSUFFICIENT_CONTEXT' else 'answer'} ({gentle})")
+print(f"  sufficiency judge = {'answer' if sufficient else 'abstain'}")
 """)
 
 # ============================================================================ WRAP
@@ -887,12 +944,21 @@ md(r"""
 The final scorecard compares the adaptive ladder with fixed policies on the test slice. One caveat:
 this slice reuses some questions from earlier rounds (see `headline_final_v25.json`), so treat it as
 held out from threshold tuning, not as a fresh never-seen benchmark.
+
+The latency column is estimated routing latency before the final answer-generation call. That answer
+call is shared across methods, so the table focuses on the retrieval strategy itself.
 """)
 
 code(r"""
 headline = load_artifact("headline_final_v25.json")    # offline eval, run once
 frontier_test = frontier_table(headline["overall"], mrr_key="mrr_first", cost_key="llm_calls")
-frontier_test
+if "avg routing latency (s)" not in frontier_test.columns:
+    latency = {
+        name.replace("_", "-"): metrics.get("avg_latency_s")
+        for name, metrics in headline["overall"].items()
+    }
+    frontier_test["avg routing latency (s)"] = frontier_test["policy"].map(latency)
+display(frontier_test)
 """)
 
 md(r"""

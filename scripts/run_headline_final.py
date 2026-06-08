@@ -41,12 +41,22 @@ ANSWER_POLICIES = ["always_answer", "always_decompose", "ladder"]   # get genera
 FRONTIER_POLICIES = ["always_answer", "always_colbert", "always_rerank", "always_decompose", "ladder"]
 PRETTY = {"always_answer": "always answer", "always_colbert": "always ColBERT",
           "always_rerank": "always rerank", "always_decompose": "always decompose", "ladder": "ladder"}
+LATENCY_MODEL = {
+    "description": "Estimated routing latency before final answer generation; final answer call is shared and excluded.",
+    "qdrant_call_s": 0.15,
+    "llm_subquery_call_s": 1.50,
+}
 
 
 def ircot_llm_calls(n_sub):
     """The IRCoT loop calls _next_subquery min(n_sub+1, 3) times (it asks once more, gets ENOUGH,
     unless it hit the hop cap). config: range(1,4) -> 3 max hops."""
     return min(n_sub + 1, 3)
+
+
+def estimated_latency_s(qdrant_calls, llm_calls):
+    return (qdrant_calls * LATENCY_MODEL["qdrant_call_s"]
+            + llm_calls * LATENCY_MODEL["llm_subquery_call_s"])
 
 
 def precision_scores(doc_ids, gold):
@@ -134,6 +144,7 @@ def main() -> int:
             d = {m: round(st.mean(r["prec"][p][m] for r in sub), 4) for m in METRICS}
             d["qdrant_calls"] = round(st.mean(r["cost"][p][0] for r in sub), 3)
             d["llm_calls"] = round(st.mean(r["cost"][p][1] for r in sub), 3)
+            d["avg_latency_s"] = round(st.mean(estimated_latency_s(*r["cost"][p]) for r in sub), 3)
             out[p] = d
         return out
 
@@ -173,6 +184,7 @@ def main() -> int:
            "test_reuse": reuse,
            "lead_metrics": ["recall@3", "full_gold@3"],
            "note_mrr": "mrr_first = reciprocal rank of the FIRST gold doc; lenient on multi-hop (rewards any one support passage). NOT the headline metric.",
+           "latency_model": LATENCY_MODEL,
            "overall": overall, "by_type": by_type, "answers": answers,
            "selective_accuracy": sel, "tier_dist": {qt: {t: sum(1 for r in rows if r["qtype"] == qt and r["tier"] == t) for t in (1, 2, 3)} for qt in ("single_hop", "multi_hop", "unanswerable")},
            "ci_vs": cis, "gate": th["_weakness_signals"], "answer_k": config.ANSWER_K}
@@ -183,9 +195,9 @@ def main() -> int:
     # report
     def ptable(title, a):
         print(f"\n=== {title} ===")
-        print(f"{'policy':18s}{'rec@1':>7}{'rec@3':>7}{'fg@3':>7}{'MRR*':>7}{'qdrant':>8}{'llm':>6}")
+        print(f"{'policy':18s}{'rec@1':>7}{'rec@3':>7}{'fg@3':>7}{'MRR*':>7}{'qdrant':>8}{'llm':>6}{'lat(s)':>8}")
         for p in FRONTIER_POLICIES:
-            v = a[p]; print(f"{PRETTY[p]:18s}{v['recall@1']:7.3f}{v['recall@3']:7.3f}{v['full_gold@3']:7.3f}{v['mrr_first']:7.3f}{v['qdrant_calls']:8.2f}{v['llm_calls']:6.2f}")
+            v = a[p]; print(f"{PRETTY[p]:18s}{v['recall@1']:7.3f}{v['recall@3']:7.3f}{v['full_gold@3']:7.3f}{v['mrr_first']:7.3f}{v['qdrant_calls']:8.2f}{v['llm_calls']:6.2f}{v['avg_latency_s']:8.2f}")
     ptable("CORRECTED frontier - OVERALL (answerable)", overall)
     ptable("single-hop", by_type["single_hop"]); ptable("multi-hop", by_type["multi_hop"])
     print("\n=== answer EM (one consistent pass) ===")
