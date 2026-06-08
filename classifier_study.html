@@ -1,0 +1,126 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classifier signal-fusion study</title><style>:root{--ink:#1a1a22;--muted:#5b6270;--line:#e5e7eb;--bg:#fafafb;--card:#fff;--accent:#d6336c;--accent2:#1c7ed6;--pos:#138a52;--neg:#c92a2a;--amber:#b8860b;}
+*{box-sizing:border-box;}body{margin:0;font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 48px 100px;}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px;}h2{font-size:23px;margin:44px 0 14px;padding-top:10px;border-top:1px solid var(--line);}
+h3{font-size:16px;margin:22px 0 8px;}p,li{color:#23262e;}.sub{color:var(--muted);font-size:14px;}
+.tag{display:inline-block;background:#fdeef4;color:var(--accent);border:1px solid #f6c6da;border-radius:999px;padding:2px 11px;font-size:12.5px;font-weight:600;margin-right:6px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}.kpi{text-align:center;}.kpi .n{font-size:21px;font-weight:700;}.kpi .l{font-size:12.5px;color:var(--muted);}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px;}th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top;}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);}td:not(:first-child),th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums;}
+.pos{color:var(--pos);font-weight:600;}.neg{color:var(--neg);font-weight:600;}.flat{color:var(--muted);}
+.badge{font-size:10.5px;padding:1px 7px;border-radius:6px;font-weight:600;}.badge-amber{background:#fdf3e0;color:var(--amber);}
+.callout{border-left:4px solid var(--accent);background:#fff;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;}.callout.good{border-color:var(--pos);}.callout.warn{border-color:var(--amber);}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#f2f3f5;padding:1px 5px;border-radius:4px;}
+ul.tight li{margin:5px 0;}.foot{color:var(--muted);font-size:13px;margin-top:50px;border-top:1px solid var(--line);padding-top:16px;}</style></head><body><div class="wrap">
+<div><span class="tag">Branch study</span><span class="tag">classifier-signal-fusion</span><span class="tag">frozen v2.5 population</span><span class="tag">n=150/150/180</span></div>
+<h1>Can a classifier fuse the signals better than one threshold?</h1>
+<p class="sub">The CTO's question, run with the v2.5 eval discipline: detect weak retrieval
+(<span class="mono">full_gold@3==0</span>), TRAIN on calibration
+(n=150), SELECT on validation (n=150),
+REPORT once on test (n=180). Detector: bm25. Higher AUC = better
+separation of good vs weak retrieval. Baseline to beat = the best single signal
+(<span class="mono">dense_variance</span>).</p>
+
+<div class="card grid4">
+  <div class="kpi"><div class="n">0.781 &rarr; 0.790</div><div class="l">val AUC: best single &rarr; LR(dense_variance + score_variance)</div></div>
+  <div class="kpi"><div class="n">0.783 &rarr; 0.797</div><div class="l">test AUC: same comparison (held out)</div></div>
+  <div class="kpi"><div class="n">12</div><div class="l">new candidate signals engineered &amp; tested</div></div>
+  <div class="kpi"><div class="n">0.839 / 0.789</div><div class="l">LR(all 19) cal vs test AUC (overfit gap)</div></div>
+</div>
+
+<h2>1. The model lineup</h2>
+<p>Single-signal thresholds vs trained fusion gates. <b>val</b> is the selection number;
+<b>test</b> is touched once. Deltas in parentheses are vs the best single signal
+(<span class="mono">dense_variance</span>). by-type AUC is on validation. <span class="mono">cv_auc</span>
+is 5-fold on calibration (stability / overfit check). The highlighted row is the interpretable
+minimal-fusion recommendation.</p>
+<table>
+<tr><th>model</th><th>AUC cal</th><th>AUC val</th><th>AUC test</th><th>PR-AUC val</th><th>val single-hop</th><th>val multi-hop</th><th>cv AUC (cal)</th></tr>
+<tr><td style='text-align:left'>single:dense_variance</td><td>0.761</td><td><b>0.781</b> <span class="flat">(+0.000)</span></td><td>0.783 <span class="flat">(+0.000)</span></td><td>0.606</td><td>0.906</td><td>0.648</td><td>&mdash;</td></tr><tr><td style='text-align:left'>single:score_variance</td><td>0.707</td><td><b>0.664</b> <span class="neg">(-0.116)</span></td><td>0.710 <span class="neg">(-0.073)</span></td><td>0.532</td><td>0.836</td><td>0.786</td><td>&mdash;</td></tr><tr style="background:#fff6fa"><td style='text-align:left'>lr_l2:selected2</td><td>0.772</td><td><b>0.790</b> <span class="pos">(+0.010)</span></td><td>0.797 <span class="pos">(+0.014)</span></td><td>0.658</td><td>0.927</td><td>0.702</td><td>0.770±0.087</td></tr><tr><td style='text-align:left'>lr_l2:orig7</td><td>0.796</td><td><b>0.777</b> <span class="neg">(-0.003)</span></td><td>0.794 <span class="pos">(+0.011)</span></td><td>0.656</td><td>0.928</td><td>0.623</td><td>0.749±0.079</td></tr><tr><td style='text-align:left'>lr_l2:ext19</td><td>0.839</td><td><b>0.784</b> <span class="pos">(+0.003)</span></td><td>0.789 <span class="pos">(+0.006)</span></td><td>0.613</td><td>0.893</td><td>0.596</td><td>0.737±0.122</td></tr><tr><td style='text-align:left'>lr_l1:ext19</td><td>0.838</td><td><b>0.780</b> <span class="neg">(-0.001)</span></td><td>0.789 <span class="pos">(+0.006)</span></td><td>0.605</td><td>0.899</td><td>0.585</td><td>0.739±0.125</td></tr><tr><td style='text-align:left'>gbt:ext19</td><td>0.999</td><td><b>0.758</b> <span class="neg">(-0.023)</span></td><td>0.782 <span class="neg">(-0.001)</span></td><td>0.589</td><td>0.848</td><td>0.607</td><td>0.741±0.121</td></tr>
+</table>
+
+<h2>2. Hunting new signals</h2>
+<p>Every candidate signal, old and <span class="badge badge-amber">new</span>, ranked by
+validation AUC. Direction shows whether high or low values flag weak retrieval. This is the
+"test it on your own corpus" methodology applied to 19 signals at once.</p>
+<table>
+<tr><th>signal</th><th>direction</th><th>AUC cal</th><th>AUC val</th><th>AUC test</th><th>val single-hop</th><th>val multi-hop</th></tr>
+<tr><td style='text-align:left'>dense_variance </td><td>low=bad</td><td>0.761</td><td><b>0.781</b></td><td>0.783</td><td>0.906</td><td>0.648</td></tr><tr><td style='text-align:left'>dense_entropy <span class="badge badge-amber">new</span></td><td>high=bad</td><td>0.761</td><td><b>0.777</b></td><td>0.784</td><td>0.908</td><td>0.648</td></tr><tr><td style='text-align:left'>dense_gap </td><td>low=bad</td><td>0.772</td><td><b>0.770</b></td><td>0.781</td><td>0.906</td><td>0.661</td></tr><tr><td style='text-align:left'>dense_cv <span class="badge badge-amber">new</span></td><td>low=bad</td><td>0.758</td><td><b>0.769</b></td><td>0.781</td><td>0.921</td><td>0.669</td></tr><tr><td style='text-align:left'>dense_top1 <span class="badge badge-amber">new</span></td><td>low=bad</td><td>0.723</td><td><b>0.754</b></td><td>0.734</td><td>0.821</td><td>0.550</td></tr><tr><td style='text-align:left'>divergence_rbo_bm25 <span class="badge badge-amber">new</span></td><td>high=bad</td><td>0.685</td><td><b>0.719</b></td><td>0.649</td><td>0.793</td><td>0.797</td></tr><tr><td style='text-align:left'>dense_margin <span class="badge badge-amber">new</span></td><td>low=bad</td><td>0.723</td><td><b>0.681</b></td><td>0.712</td><td>0.860</td><td>0.591</td></tr><tr><td style='text-align:left'>fused_entropy <span class="badge badge-amber">new</span></td><td>high=bad</td><td>0.700</td><td><b>0.668</b></td><td>0.721</td><td>0.859</td><td>0.718</td></tr><tr><td style='text-align:left'>score_variance </td><td>low=bad</td><td>0.707</td><td><b>0.664</b></td><td>0.710</td><td>0.836</td><td>0.786</td></tr><tr><td style='text-align:left'>max_score </td><td>low=bad</td><td>0.667</td><td><b>0.647</b></td><td>0.707</td><td>0.847</td><td>0.672</td></tr><tr><td style='text-align:left'>top1_agree_bm25 <span class="badge badge-amber">new</span></td><td>low=bad</td><td>0.640</td><td><b>0.643</b></td><td>0.679</td><td>0.758</td><td>0.682</td></tr><tr><td style='text-align:left'>fused_cv <span class="badge badge-amber">new</span></td><td>low=bad</td><td>0.700</td><td><b>0.640</b></td><td>0.717</td><td>0.887</td><td>0.602</td></tr><tr><td style='text-align:left'>confidence_gap </td><td>low=bad</td><td>0.696</td><td><b>0.640</b></td><td>0.721</td><td>0.865</td><td>0.633</td></tr><tr><td style='text-align:left'>divergence_bm25 </td><td>high=bad</td><td>0.541</td><td><b>0.616</b></td><td>0.517</td><td>0.672</td><td>0.635</td></tr><tr><td style='text-align:left'>dense_skew <span class="badge badge-amber">new</span></td><td>low=bad</td><td>0.637</td><td><b>0.601</b></td><td>0.635</td><td>0.851</td><td>0.526</td></tr><tr><td style='text-align:left'>evidence_coverage </td><td>low=bad</td><td>0.582</td><td><b>0.600</b></td><td>0.572</td><td>0.666</td><td>0.398</td></tr><tr><td style='text-align:left'>fused_margin <span class="badge badge-amber">new</span></td><td>low=bad</td><td>0.620</td><td><b>0.599</b></td><td>0.695</td><td>0.853</td><td>0.535</td></tr><tr><td style='text-align:left'>fused_dense_overlap <span class="badge badge-amber">new</span></td><td>low=bad</td><td>0.502</td><td><b>0.581</b></td><td>0.500</td><td>0.607</td><td>0.683</td></tr><tr><td style='text-align:left'>dense_mean <span class="badge badge-amber">new</span></td><td>low=bad</td><td>0.529</td><td><b>0.547</b></td><td>0.530</td><td>0.405</td><td>0.406</td></tr>
+</table>
+<p class="sub">Base rate of weak retrieval on validation: all 32.7% &middot;
+single-hop 8.0% &middot; multi-hop 82.0%. Single-hop
+retrieval is mostly strong, so weak cases are rare there; the multi-hop slice is where detection
+has the most to separate.</p>
+
+<h2>3. At a real operating point</h2>
+<p>AUC is ranking quality; the gate ships a threshold. <b>recall</b> = of truly-weak retrievals,
+how many we catch (and escalate); <b>FPR</b> = of strong retrievals, how many we needlessly
+escalate (wasted cost); <b>precision</b> = of what we escalate, how much truly needed it.</p>
+
+<h3>3a. Each gate's own max-Youden point (NOT comparable across rows)</h3>
+<p>Threshold chosen on calibration by Youden J, read on test. The gates land at different recall
+levels, so do not read this as "LR catches less" - that is just a different threshold. Use 3b for a
+fair comparison.</p>
+<table>
+<tr><th>gate (on test)</th><th>recall (catch weak)</th><th>precision</th><th>FPR (waste)</th><th>F1</th><th>accuracy</th></tr>
+<tr><td style='text-align:left'>OR-gate (live v2.5: dense_variance OR score_variance)</td><td>90.7%</td><td>48.5%</td><td>41.3%</td><td>63.2%</td><td>68.3%</td></tr><tr><td style='text-align:left'>single:dense_variance  @cal-Youden</td><td>81.5%</td><td>54.3%</td><td>29.4%</td><td>65.2%</td><td>73.9%</td></tr><tr style="background:#fff6fa"><td style='text-align:left'>lr_l2:selected2  @cal-Youden</td><td>64.8%</td><td>54.7%</td><td>23.0%</td><td>59.3%</td><td>73.3%</td></tr><tr><td style='text-align:left'>lr_l2:ext19  @cal-Youden</td><td>57.4%</td><td>50.8%</td><td>23.8%</td><td>53.9%</td><td>70.6%</td></tr><tr><td style='text-align:left'>lr_l1:ext19  @cal-Youden</td><td>75.9%</td><td>52.6%</td><td>29.4%</td><td>62.1%</td><td>72.2%</td></tr><tr><td style='text-align:left'>gbt:ext19  @cal-Youden</td><td>63.0%</td><td>52.3%</td><td>24.6%</td><td>57.1%</td><td>71.7%</td></tr>
+</table>
+
+<h3>3b. Matched recall: same catch rate, who wastes less? (the fair comparison)</h3>
+<p>Threshold set on calibration to hit a target catch rate, read on test. At the SAME recall, a
+lower FPR means less strong retrieval needlessly escalated - real saved cost. The live OR-gate sits
+near 90% recall at 41.3% FPR (row above) for reference.</p>
+<table>
+<tr><th>target recall &middot; gate</th><th>test recall</th><th>FPR (waste)</th><th>precision</th></tr>
+<tr><td style='text-align:left'>~90% &middot; best single (dense_variance)</td><td>92.6%</td><td>50.8%</td><td>43.9%</td></tr><tr style="background:#fff6fa"><td style='text-align:left'>~90% &middot; LR (dense_variance + score_variance)</td><td>94.4%</td><td>50.0%</td><td>44.7%</td></tr><tr><td style='text-align:left'>~90% &middot; LR (all 19)</td><td>87.0%</td><td>38.1%</td><td>49.5%</td></tr><tr><td style='text-align:left'>~90% &middot; LR-L1 (all 19, sparse)</td><td>87.0%</td><td>39.7%</td><td>48.4%</td></tr><tr><td style='text-align:left'>~80% &middot; best single (dense_variance)</td><td>90.7%</td><td>34.1%</td><td>53.3%</td></tr><tr style="background:#fff6fa"><td style='text-align:left'>~80% &middot; LR (dense_variance + score_variance)</td><td>81.5%</td><td>34.1%</td><td>50.6%</td></tr><tr><td style='text-align:left'>~80% &middot; LR (all 19)</td><td>74.1%</td><td>31.8%</td><td>50.0%</td></tr><tr><td style='text-align:left'>~80% &middot; LR-L1 (all 19, sparse)</td><td>75.9%</td><td>29.4%</td><td>52.6%</td></tr>
+</table>
+
+<h2>4. What the model weighs</h2>
+<p>Standardised-feature weights (logistic regression) and split importances. This is the
+interpretability the workshop story needs: a fused gate you can still read.</p>
+<h3>lr_l2:selected2 weights (standardised features)</h3><table><tr><th>feature</th><th>weight</th></tr><tr><td style='text-align:left'>dense_variance</td><td>-0.882</td></tr><tr><td style='text-align:left'>score_variance</td><td>-0.367</td></tr></table><h3>lr_l1:ext19 weights (standardised features)</h3><table><tr><th>feature</th><th>weight</th></tr><tr><td style='text-align:left'>dense_margin</td><td>-1.319</td></tr><tr><td style='text-align:left'>dense_skew</td><td>+0.849</td></tr><tr><td style='text-align:left'>dense_gap</td><td>-0.495</td></tr><tr><td style='text-align:left'>fused_dense_overlap</td><td>+0.494</td></tr><tr><td style='text-align:left'>evidence_coverage</td><td>-0.426</td></tr><tr><td style='text-align:left'>divergence_rbo_bm25</td><td>+0.357</td></tr><tr><td style='text-align:left'>fused_margin</td><td>+0.352</td></tr><tr><td style='text-align:left'>score_variance</td><td>-0.272</td></tr><tr><td style='text-align:left'>fused_cv</td><td>-0.216</td></tr><tr><td style='text-align:left'>dense_top1</td><td>-0.022</td></tr><tr><td style='text-align:left'>divergence_bm25</td><td>-0.003</td></tr></table>
+
+<h2>Takeaways</h2>
+<ul class="tight">
+<li><b>The fusion lift shows up in AUC but mostly vanishes at a real operating point.</b>
+LR(dense_variance + score_variance) is the best model on ranking quality (test AUC 0.783 &rarr;
+0.797, PR-AUC 0.606 &rarr; 0.658). But at
+matched recall (section 3b) it ties the single signal: at ~80% catch rate both waste 34.1% of
+strong retrieval (34.1% for the single signal). The AUC gain (+0.014)
+is also inside the 5-fold CV spread (&plusmn;0.0869). Net: marginal and
+corpus-specific, not a step change.</li>
+<li><b>The cheapest win here is not the classifier at all.</b> The live OR-gate catches
+90.7% of weak retrieval at 41.3% FPR; a single well-set
+dense_variance threshold hits the same catch rate at 34.1% FPR. Firing when EITHER signal
+trips over-escalates - tightening the gate to one calibrated signal saves wasted cost with no model at
+all. Worth checking independently of this study.</li>
+<li><b>More signals and fancier models do NOT help - they overfit.</b> Adding all 19 features or
+switching to gradient boosting lowers test AUC and blows the cal&rarr;test gap wide open (GBT:
+cal 0.999 vs test 0.782
+on 150 calibration rows). On data this size, two regularised signals beat
+nineteen.</li>
+<li><b>Fusion is a weighted compromise across query types.</b> On validation (single-hop / multi-hop AUC):
+dense_variance 0.906 / 0.648; score_variance 0.836 / 0.786; the fused LR
+0.927 / 0.702. The fused gate tracks the stronger signal on each type but is pulled toward the
+majority class, so a type-specific signal can still beat it on the minority slice. If one query type is
+what you care about, its dedicated signal may still win there.</li>
+<li><b>The strongest single signal overall is still dense_variance.</b>
+None of the 12 engineered signals top it on overall validation AUC. The most interesting of the new
+ones is divergence_rbo_bm25, the strongest engineered signal on the multi-hop slice (val multi-hop AUC
+0.797) - a candidate for the "test on your corpus" catalog, not the notebook spine.</li>
+<li><b>Interpretability is preserved.</b> The winning gate is two readable weights
+(dense_variance -0.8825,
+score_variance -0.3666; both
+negative = low value flags weak retrieval). Adopting it would not turn the workshop into an
+ML-modelling lesson.</li>
+<li><b>This measures DETECTION only.</b> Whether the marginal AUC/PR-AUC lift actually moves the
+end-to-end cost/quality frontier needs the classifier dropped into the live gate and a headline
+re-run. Given the size of the lift here, do that before committing to it in the notebook.</li>
+</ul>
+<div class="foot">Generated by <span class="mono">scripts/run_classifier_study.py</span>
+(scenario: frozen v2.5 population, n=150/150/180 cal/val/test).
+Numbers in <span class="mono">artifacts/classifier_study.json</span>.</div>
+</div></body></html>

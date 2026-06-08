@@ -1,0 +1,844 @@
+{
+  "n": 180,
+  "split": "test (frozen)",
+  "or_cal_escalation": 0.58,
+  "matched_thresholds": {
+    "lr2": 0.3679,
+    "lr19": 0.3608,
+    "lr19+looksmulti": 0.2851
+  },
+  "points": {
+    "always_answer": {
+      "overall": {
+        "full_gold@3": 0.7,
+        "recall@3": 0.8167,
+        "mrr": 0.8733,
+        "cost_retr": 1.0,
+        "cost_llm": 0.0,
+        "escalate_rate": 0.0,
+        "decompose_rate": 0.0,
+        "n": 180
+      },
+      "single_hop": {
+        "full_gold@3": 0.975,
+        "recall@3": 0.975,
+        "mrr": 0.9056,
+        "cost_retr": 1.0,
+        "cost_llm": 0.0,
+        "escalate_rate": 0.0,
+        "decompose_rate": 0.0,
+        "n": 120
+      },
+      "multi_hop": {
+        "full_gold@3": 0.15,
+        "recall@3": 0.5,
+        "mrr": 0.8089,
+        "cost_retr": 1.0,
+        "cost_llm": 0.0,
+        "escalate_rate": 0.0,
+        "decompose_rate": 0.0,
+        "n": 60
+      }
+    },
+    "always_colbert": {
+      "overall": {
+        "full_gold@3": 0.6833,
+        "recall@3": 0.8023,
+        "mrr": 0.8921,
+        "cost_retr": 1.0,
+        "cost_llm": 0.0,
+        "escalate_rate": 1.0,
+        "decompose_rate": 0.0,
+        "n": 180
+      },
+      "single_hop": {
+        "full_gold@3": 0.9417,
+        "recall@3": 0.9417,
+        "mrr": 0.9181,
+        "cost_retr": 1.0,
+        "cost_llm": 0.0,
+        "escalate_rate": 1.0,
+        "decompose_rate": 0.0,
+        "n": 120
+      },
+      "multi_hop": {
+        "full_gold@3": 0.1667,
+        "recall@3": 0.5236,
+        "mrr": 0.8403,
+        "cost_retr": 1.0,
+        "cost_llm": 0.0,
+        "escalate_rate": 1.0,
+        "decompose_rate": 0.0,
+        "n": 60
+      }
+    },
+    "always_decompose": {
+      "overall": {
+        "full_gold@3": 0.7944,
+        "recall@3": 0.8773,
+        "mrr": 0.9006,
+        "cost_retr": 2.139,
+        "cost_llm": 1.139,
+        "escalate_rate": 1.0,
+        "decompose_rate": 1.0,
+        "n": 180
+      },
+      "single_hop": {
+        "full_gold@3": 0.975,
+        "recall@3": 0.975,
+        "mrr": 0.9076,
+        "cost_retr": 1.658,
+        "cost_llm": 0.658,
+        "escalate_rate": 1.0,
+        "decompose_rate": 1.0,
+        "n": 120
+      },
+      "multi_hop": {
+        "full_gold@3": 0.4333,
+        "recall@3": 0.6819,
+        "mrr": 0.8867,
+        "cost_retr": 3.1,
+        "cost_llm": 2.1,
+        "escalate_rate": 1.0,
+        "decompose_rate": 1.0,
+        "n": 60
+      }
+    },
+    "or_gate": {
+      "overall": {
+        "full_gold@3": 0.7611,
+        "recall@3": 0.8523,
+        "mrr": 0.9104,
+        "cost_retr": 1.644,
+        "cost_llm": 0.644,
+        "escalate_rate": 0.561,
+        "decompose_rate": 0.294,
+        "n": 180
+      },
+      "single_hop": {
+        "full_gold@3": 0.9583,
+        "recall@3": 0.9583,
+        "mrr": 0.9222,
+        "cost_retr": 1.1,
+        "cost_llm": 0.1,
+        "escalate_rate": 0.417,
+        "decompose_rate": 0.05,
+        "n": 120
+      },
+      "multi_hop": {
+        "full_gold@3": 0.3667,
+        "recall@3": 0.6403,
+        "mrr": 0.8867,
+        "cost_retr": 2.733,
+        "cost_llm": 1.733,
+        "escalate_rate": 0.85,
+        "decompose_rate": 0.783,
+        "n": 60
+      }
+    },
+    "lr2@matched": {
+      "overall": {
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8551,
+        "mrr": 0.9067,
+        "cost_retr": 1.672,
+        "cost_llm": 0.672,
+        "escalate_rate": 0.561,
+        "decompose_rate": 0.311,
+        "n": 180
+      },
+      "single_hop": {
+        "full_gold@3": 0.9583,
+        "recall@3": 0.9583,
+        "mrr": 0.9167,
+        "cost_retr": 1.125,
+        "cost_llm": 0.125,
+        "escalate_rate": 0.392,
+        "decompose_rate": 0.058,
+        "n": 120
+      },
+      "multi_hop": {
+        "full_gold@3": 0.3833,
+        "recall@3": 0.6486,
+        "mrr": 0.8867,
+        "cost_retr": 2.767,
+        "cost_llm": 1.767,
+        "escalate_rate": 0.9,
+        "decompose_rate": 0.817,
+        "n": 60
+      }
+    },
+    "lr19@matched": {
+      "overall": {
+        "full_gold@3": 0.7611,
+        "recall@3": 0.8523,
+        "mrr": 0.8993,
+        "cost_retr": 1.589,
+        "cost_llm": 0.589,
+        "escalate_rate": 0.522,
+        "decompose_rate": 0.278,
+        "n": 180
+      },
+      "single_hop": {
+        "full_gold@3": 0.9583,
+        "recall@3": 0.9583,
+        "mrr": 0.9083,
+        "cost_retr": 1.075,
+        "cost_llm": 0.075,
+        "escalate_rate": 0.375,
+        "decompose_rate": 0.042,
+        "n": 120
+      },
+      "multi_hop": {
+        "full_gold@3": 0.3667,
+        "recall@3": 0.6403,
+        "mrr": 0.8811,
+        "cost_retr": 2.617,
+        "cost_llm": 1.617,
+        "escalate_rate": 0.817,
+        "decompose_rate": 0.75,
+        "n": 60
+      }
+    },
+    "lr19+looksmulti@matched": {
+      "overall": {
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "mrr": 0.8919,
+        "cost_retr": 1.728,
+        "cost_llm": 0.728,
+        "escalate_rate": 0.489,
+        "decompose_rate": 0.35,
+        "n": 180
+      },
+      "single_hop": {
+        "full_gold@3": 0.9583,
+        "recall@3": 0.9583,
+        "mrr": 0.8944,
+        "cost_retr": 1.167,
+        "cost_llm": 0.167,
+        "escalate_rate": 0.283,
+        "decompose_rate": 0.1,
+        "n": 120
+      },
+      "multi_hop": {
+        "full_gold@3": 0.3833,
+        "recall@3": 0.6542,
+        "mrr": 0.8867,
+        "cost_retr": 2.85,
+        "cost_llm": 1.85,
+        "escalate_rate": 0.9,
+        "decompose_rate": 0.85,
+        "n": 60
+      }
+    }
+  },
+  "frontiers": {
+    "lr2": [
+      {
+        "thr": 0.02,
+        "cost_llm": 0.75,
+        "cost_retr": 1.75,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.378
+      },
+      {
+        "thr": 0.06,
+        "cost_llm": 0.75,
+        "cost_retr": 1.75,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.378
+      },
+      {
+        "thr": 0.1,
+        "cost_llm": 0.75,
+        "cost_retr": 1.75,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.378
+      },
+      {
+        "thr": 0.14,
+        "cost_llm": 0.733,
+        "cost_retr": 1.733,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.372
+      },
+      {
+        "thr": 0.18,
+        "cost_llm": 0.733,
+        "cost_retr": 1.733,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.372
+      },
+      {
+        "thr": 0.22,
+        "cost_llm": 0.733,
+        "cost_retr": 1.733,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.361
+      },
+      {
+        "thr": 0.26,
+        "cost_llm": 0.717,
+        "cost_retr": 1.717,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.35
+      },
+      {
+        "thr": 0.3,
+        "cost_llm": 0.717,
+        "cost_retr": 1.717,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.344
+      },
+      {
+        "thr": 0.34,
+        "cost_llm": 0.672,
+        "cost_retr": 1.672,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8551,
+        "decompose_rate": 0.311
+      },
+      {
+        "thr": 0.38,
+        "cost_llm": 0.667,
+        "cost_retr": 1.667,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8551,
+        "decompose_rate": 0.306
+      },
+      {
+        "thr": 0.42,
+        "cost_llm": 0.622,
+        "cost_retr": 1.622,
+        "full_gold@3": 0.7556,
+        "recall@3": 0.8495,
+        "decompose_rate": 0.283
+      },
+      {
+        "thr": 0.46,
+        "cost_llm": 0.594,
+        "cost_retr": 1.594,
+        "full_gold@3": 0.75,
+        "recall@3": 0.8477,
+        "decompose_rate": 0.267
+      },
+      {
+        "thr": 0.5,
+        "cost_llm": 0.55,
+        "cost_retr": 1.55,
+        "full_gold@3": 0.7444,
+        "recall@3": 0.8458,
+        "decompose_rate": 0.25
+      },
+      {
+        "thr": 0.54,
+        "cost_llm": 0.478,
+        "cost_retr": 1.478,
+        "full_gold@3": 0.7333,
+        "recall@3": 0.8394,
+        "decompose_rate": 0.217
+      },
+      {
+        "thr": 0.58,
+        "cost_llm": 0.444,
+        "cost_retr": 1.444,
+        "full_gold@3": 0.7278,
+        "recall@3": 0.8347,
+        "decompose_rate": 0.206
+      },
+      {
+        "thr": 0.62,
+        "cost_llm": 0.344,
+        "cost_retr": 1.344,
+        "full_gold@3": 0.7111,
+        "recall@3": 0.8245,
+        "decompose_rate": 0.144
+      },
+      {
+        "thr": 0.66,
+        "cost_llm": 0.311,
+        "cost_retr": 1.311,
+        "full_gold@3": 0.7111,
+        "recall@3": 0.8259,
+        "decompose_rate": 0.133
+      },
+      {
+        "thr": 0.7,
+        "cost_llm": 0.217,
+        "cost_retr": 1.217,
+        "full_gold@3": 0.7,
+        "recall@3": 0.8185,
+        "decompose_rate": 0.094
+      },
+      {
+        "thr": 0.74,
+        "cost_llm": 0.172,
+        "cost_retr": 1.172,
+        "full_gold@3": 0.6944,
+        "recall@3": 0.8157,
+        "decompose_rate": 0.078
+      },
+      {
+        "thr": 0.78,
+        "cost_llm": 0.172,
+        "cost_retr": 1.172,
+        "full_gold@3": 0.6944,
+        "recall@3": 0.8157,
+        "decompose_rate": 0.072
+      },
+      {
+        "thr": 0.82,
+        "cost_llm": 0.139,
+        "cost_retr": 1.139,
+        "full_gold@3": 0.6944,
+        "recall@3": 0.8157,
+        "decompose_rate": 0.061
+      },
+      {
+        "thr": 0.86,
+        "cost_llm": 0.078,
+        "cost_retr": 1.078,
+        "full_gold@3": 0.6944,
+        "recall@3": 0.8083,
+        "decompose_rate": 0.033
+      },
+      {
+        "thr": 0.9,
+        "cost_llm": 0.017,
+        "cost_retr": 1.017,
+        "full_gold@3": 0.6944,
+        "recall@3": 0.8111,
+        "decompose_rate": 0.006
+      },
+      {
+        "thr": 0.94,
+        "cost_llm": 0.0,
+        "cost_retr": 1.0,
+        "full_gold@3": 0.7,
+        "recall@3": 0.8167,
+        "decompose_rate": 0.0
+      },
+      {
+        "thr": 0.98,
+        "cost_llm": 0.0,
+        "cost_retr": 1.0,
+        "full_gold@3": 0.7,
+        "recall@3": 0.8167,
+        "decompose_rate": 0.0
+      }
+    ],
+    "lr19": [
+      {
+        "thr": 0.02,
+        "cost_llm": 0.75,
+        "cost_retr": 1.75,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.378
+      },
+      {
+        "thr": 0.06,
+        "cost_llm": 0.733,
+        "cost_retr": 1.733,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.361
+      },
+      {
+        "thr": 0.1,
+        "cost_llm": 0.733,
+        "cost_retr": 1.733,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.361
+      },
+      {
+        "thr": 0.14,
+        "cost_llm": 0.683,
+        "cost_retr": 1.683,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.339
+      },
+      {
+        "thr": 0.18,
+        "cost_llm": 0.672,
+        "cost_retr": 1.672,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.328
+      },
+      {
+        "thr": 0.22,
+        "cost_llm": 0.656,
+        "cost_retr": 1.656,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8551,
+        "decompose_rate": 0.317
+      },
+      {
+        "thr": 0.26,
+        "cost_llm": 0.611,
+        "cost_retr": 1.611,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8551,
+        "decompose_rate": 0.294
+      },
+      {
+        "thr": 0.3,
+        "cost_llm": 0.611,
+        "cost_retr": 1.611,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8551,
+        "decompose_rate": 0.294
+      },
+      {
+        "thr": 0.34,
+        "cost_llm": 0.589,
+        "cost_retr": 1.589,
+        "full_gold@3": 0.7611,
+        "recall@3": 0.8523,
+        "decompose_rate": 0.283
+      },
+      {
+        "thr": 0.38,
+        "cost_llm": 0.578,
+        "cost_retr": 1.578,
+        "full_gold@3": 0.7556,
+        "recall@3": 0.8505,
+        "decompose_rate": 0.272
+      },
+      {
+        "thr": 0.42,
+        "cost_llm": 0.55,
+        "cost_retr": 1.55,
+        "full_gold@3": 0.75,
+        "recall@3": 0.8477,
+        "decompose_rate": 0.256
+      },
+      {
+        "thr": 0.46,
+        "cost_llm": 0.517,
+        "cost_retr": 1.517,
+        "full_gold@3": 0.7444,
+        "recall@3": 0.8449,
+        "decompose_rate": 0.239
+      },
+      {
+        "thr": 0.5,
+        "cost_llm": 0.444,
+        "cost_retr": 1.444,
+        "full_gold@3": 0.7333,
+        "recall@3": 0.8394,
+        "decompose_rate": 0.211
+      },
+      {
+        "thr": 0.54,
+        "cost_llm": 0.383,
+        "cost_retr": 1.383,
+        "full_gold@3": 0.7222,
+        "recall@3": 0.8324,
+        "decompose_rate": 0.178
+      },
+      {
+        "thr": 0.58,
+        "cost_llm": 0.356,
+        "cost_retr": 1.356,
+        "full_gold@3": 0.7167,
+        "recall@3": 0.8296,
+        "decompose_rate": 0.161
+      },
+      {
+        "thr": 0.62,
+        "cost_llm": 0.35,
+        "cost_retr": 1.35,
+        "full_gold@3": 0.7111,
+        "recall@3": 0.8269,
+        "decompose_rate": 0.156
+      },
+      {
+        "thr": 0.66,
+        "cost_llm": 0.328,
+        "cost_retr": 1.328,
+        "full_gold@3": 0.7056,
+        "recall@3": 0.8241,
+        "decompose_rate": 0.144
+      },
+      {
+        "thr": 0.7,
+        "cost_llm": 0.289,
+        "cost_retr": 1.289,
+        "full_gold@3": 0.7,
+        "recall@3": 0.8213,
+        "decompose_rate": 0.128
+      },
+      {
+        "thr": 0.74,
+        "cost_llm": 0.256,
+        "cost_retr": 1.256,
+        "full_gold@3": 0.6944,
+        "recall@3": 0.8157,
+        "decompose_rate": 0.117
+      },
+      {
+        "thr": 0.78,
+        "cost_llm": 0.25,
+        "cost_retr": 1.25,
+        "full_gold@3": 0.7056,
+        "recall@3": 0.8231,
+        "decompose_rate": 0.111
+      },
+      {
+        "thr": 0.82,
+        "cost_llm": 0.189,
+        "cost_retr": 1.189,
+        "full_gold@3": 0.7,
+        "recall@3": 0.8222,
+        "decompose_rate": 0.089
+      },
+      {
+        "thr": 0.86,
+        "cost_llm": 0.122,
+        "cost_retr": 1.122,
+        "full_gold@3": 0.7056,
+        "recall@3": 0.8231,
+        "decompose_rate": 0.067
+      },
+      {
+        "thr": 0.9,
+        "cost_llm": 0.067,
+        "cost_retr": 1.067,
+        "full_gold@3": 0.7056,
+        "recall@3": 0.8213,
+        "decompose_rate": 0.039
+      },
+      {
+        "thr": 0.94,
+        "cost_llm": 0.044,
+        "cost_retr": 1.044,
+        "full_gold@3": 0.7,
+        "recall@3": 0.8185,
+        "decompose_rate": 0.028
+      },
+      {
+        "thr": 0.98,
+        "cost_llm": 0.017,
+        "cost_retr": 1.017,
+        "full_gold@3": 0.7,
+        "recall@3": 0.8167,
+        "decompose_rate": 0.006
+      }
+    ],
+    "lr19+looksmulti": [
+      {
+        "thr": 0.02,
+        "cost_llm": 0.75,
+        "cost_retr": 1.75,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.378
+      },
+      {
+        "thr": 0.06,
+        "cost_llm": 0.75,
+        "cost_retr": 1.75,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.378
+      },
+      {
+        "thr": 0.1,
+        "cost_llm": 0.75,
+        "cost_retr": 1.75,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.378
+      },
+      {
+        "thr": 0.14,
+        "cost_llm": 0.75,
+        "cost_retr": 1.75,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.378
+      },
+      {
+        "thr": 0.18,
+        "cost_llm": 0.733,
+        "cost_retr": 1.733,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.372
+      },
+      {
+        "thr": 0.22,
+        "cost_llm": 0.733,
+        "cost_retr": 1.733,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.367
+      },
+      {
+        "thr": 0.26,
+        "cost_llm": 0.728,
+        "cost_retr": 1.728,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.356
+      },
+      {
+        "thr": 0.3,
+        "cost_llm": 0.711,
+        "cost_retr": 1.711,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.344
+      },
+      {
+        "thr": 0.34,
+        "cost_llm": 0.694,
+        "cost_retr": 1.694,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.339
+      },
+      {
+        "thr": 0.38,
+        "cost_llm": 0.694,
+        "cost_retr": 1.694,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.339
+      },
+      {
+        "thr": 0.42,
+        "cost_llm": 0.678,
+        "cost_retr": 1.678,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.333
+      },
+      {
+        "thr": 0.46,
+        "cost_llm": 0.667,
+        "cost_retr": 1.667,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8569,
+        "decompose_rate": 0.328
+      },
+      {
+        "thr": 0.5,
+        "cost_llm": 0.622,
+        "cost_retr": 1.622,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8551,
+        "decompose_rate": 0.311
+      },
+      {
+        "thr": 0.54,
+        "cost_llm": 0.611,
+        "cost_retr": 1.611,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8588,
+        "decompose_rate": 0.306
+      },
+      {
+        "thr": 0.58,
+        "cost_llm": 0.611,
+        "cost_retr": 1.611,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8588,
+        "decompose_rate": 0.3
+      },
+      {
+        "thr": 0.62,
+        "cost_llm": 0.611,
+        "cost_retr": 1.611,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8588,
+        "decompose_rate": 0.294
+      },
+      {
+        "thr": 0.66,
+        "cost_llm": 0.6,
+        "cost_retr": 1.6,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8588,
+        "decompose_rate": 0.289
+      },
+      {
+        "thr": 0.7,
+        "cost_llm": 0.55,
+        "cost_retr": 1.55,
+        "full_gold@3": 0.7611,
+        "recall@3": 0.856,
+        "decompose_rate": 0.267
+      },
+      {
+        "thr": 0.74,
+        "cost_llm": 0.517,
+        "cost_retr": 1.517,
+        "full_gold@3": 0.7667,
+        "recall@3": 0.8644,
+        "decompose_rate": 0.244
+      },
+      {
+        "thr": 0.78,
+        "cost_llm": 0.467,
+        "cost_retr": 1.467,
+        "full_gold@3": 0.75,
+        "recall@3": 0.8574,
+        "decompose_rate": 0.222
+      },
+      {
+        "thr": 0.82,
+        "cost_llm": 0.411,
+        "cost_retr": 1.411,
+        "full_gold@3": 0.7278,
+        "recall@3": 0.8454,
+        "decompose_rate": 0.189
+      },
+      {
+        "thr": 0.86,
+        "cost_llm": 0.317,
+        "cost_retr": 1.317,
+        "full_gold@3": 0.7278,
+        "recall@3": 0.8435,
+        "decompose_rate": 0.15
+      },
+      {
+        "thr": 0.9,
+        "cost_llm": 0.25,
+        "cost_retr": 1.25,
+        "full_gold@3": 0.7222,
+        "recall@3": 0.838,
+        "decompose_rate": 0.111
+      },
+      {
+        "thr": 0.94,
+        "cost_llm": 0.178,
+        "cost_retr": 1.178,
+        "full_gold@3": 0.7167,
+        "recall@3": 0.8343,
+        "decompose_rate": 0.083
+      },
+      {
+        "thr": 0.98,
+        "cost_llm": 0.028,
+        "cost_retr": 1.028,
+        "full_gold@3": 0.7,
+        "recall@3": 0.8185,
+        "decompose_rate": 0.017
+      }
+    ]
+  }
+}
