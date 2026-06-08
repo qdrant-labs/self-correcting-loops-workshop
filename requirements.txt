@@ -4,17 +4,15 @@
 
 # --- Retrieval + embeddings (all local, ONNX via FastEmbed) ---
 qdrant-client>=1.12          # Query API (Prefetch + FusionQuery), named vectors
-fastembed>=0.5               # dense (bge-base), sparse bm25 + miniCOIL, TextCrossEncoder reranker
+fastembed>=0.5               # dense (bge-base) + miniCOIL sparse + ColBERT late interaction
 
-# --- Cross-provider LLM routing ---
-litellm>=1.55                # Claude (agent) + GPT (judge) behind one interface
+# --- LLM routing (Claude via LiteLLM) ---
+litellm>=1.55                # routes the agent + STOP autorater behind one interface
 anthropic                    # Claude SDK (the agent, via LiteLLM)
-openai>=1.50                 # gpt-5.5 judge
 
-# --- Datasets + IR / answer eval ---
-datasets>=2.19               # MuSiQue (primary), FRAMES / BRIGHT (generalization) from HuggingFace
-ranx>=0.3                    # IR metrics: recall@k, nDCG@k
-scikit-learn                 # AUC / ROC / calibration
+# --- Dataset build + notebook metrics ---
+datasets>=2.19               # MuSiQue from HuggingFace (dataset build only)
+scikit-learn                 # AUC / ROC for the live signal benchmark in the notebook
 pandas
 numpy
 
@@ -22,7 +20,6 @@ numpy
 jupyter
 ipykernel
 matplotlib
-seaborn                      # correlation heatmap, ROC plots
 
 # --- Utilities ---
 python-dotenv

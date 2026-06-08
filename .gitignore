@@ -180,6 +180,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-tutorials/*
-deck/*
-briefing.html
+# Regenerable cache - audit_single_hop.py rebuilds it; the notebook does not read it
+artifacts/single_hop_quality.json

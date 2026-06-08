@@ -1,9 +1,8 @@
 """Phase 2: embed the corpus and upsert it into Qdrant with named vectors.
 
-One Qdrant collection, three vectors per point:
+One Qdrant collection, two vectors per point:
   - dense    : BAAI/bge-base-en-v1.5 (768-d, cosine)
-  - bm25     : Qdrant/bm25            (sparse, IDF modifier)  - lexical / divergence
-  - minicoil : Qdrant/minicoil-v1     (sparse, IDF modifier)  - production sparse
+  - minicoil : Qdrant/minicoil-v1     (sparse, IDF modifier)  - word-sense-aware sparse
 
 Payload carries title, text, and per-hop gold membership (supports), so a trace
 inspector can see directly whether a missing hop's paragraph was retrieved.
@@ -53,7 +52,6 @@ def main() -> int:
 
     print("loading FastEmbed models (first run downloads + caches) ...")
     dense_model = TextEmbedding(model_name=config.DENSE_MODEL)
-    bm25_model = SparseTextEmbedding(model_name=config.BM25_MODEL)
     minicoil_model = SparseTextEmbedding(model_name=config.MINICOIL_MODEL)
 
     def embed_dense() -> list[list[float]]:
@@ -72,7 +70,6 @@ def main() -> int:
         return out
 
     dense_vecs = embed_dense()
-    bm25_vecs = embed_sparse(bm25_model, "bm25")
     minicoil_vecs = embed_sparse(minicoil_model, "minicoil")
 
     client = QdrantClient(url=config.QDRANT_URL, timeout=120)
@@ -82,7 +79,6 @@ def main() -> int:
         collection_name=config.COLLECTION,
         vectors_config={config.DENSE_VEC: models.VectorParams(size=config.DENSE_DIM, distance=models.Distance.COSINE)},
         sparse_vectors_config={
-            config.BM25_VEC: models.SparseVectorParams(modifier=models.Modifier.IDF),
             config.MINICOIL_VEC: models.SparseVectorParams(modifier=models.Modifier.IDF),
         },
     )
@@ -102,7 +98,6 @@ def main() -> int:
                     id=doc["doc_id"],
                     vector={
                         config.DENSE_VEC: dense_vecs[i],
-                        config.BM25_VEC: to_sparse(bm25_vecs[i]),
                         config.MINICOIL_VEC: to_sparse(minicoil_vecs[i]),
                     },
                     payload={"title": doc["title"], "text": doc["text"], "supports": doc.get("supports", [])},

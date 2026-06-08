@@ -18,20 +18,14 @@ are counted. The lab uses a **mixed workload**: single-hop, multi-hop, and
 unanswerable questions.
 
 - **The lab:** [`notebooks/lab.ipynb`](notebooks/lab.ipynb) - CP1 concepts/baseline, CP2 metrics/signals/gate, CP3 corrective loop + STOP, then wrap.
-- **Intro deck outline:** [`deck/intro_outline.md`](deck/intro_outline.md).
-- **Results summary:** [`briefing.html`](briefing.html).
-- **Docs tutorial outline:** [`tutorials/in-loop-evals-OUTLINE.md`](tutorials/in-loop-evals-OUTLINE.md).
-
-On the workshop VM everything below is pre-installed, pre-embedded, and warm: no
-setup in the room. These instructions reproduce that state from a clean clone.
 
 ## Prerequisites
 
 - Docker (for Qdrant)
 - Python 3.12
-- An `.env` at the repo root with `ANTHROPIC_API_KEY` and `OPENAI_API_KEY`
+- An `.env` at the repo root with `ANTHROPIC_API_KEY`
 
-## Quickstart (build the VM state from a clean clone)
+## Setup
 
 ```bash
 # 1. Qdrant
@@ -39,22 +33,23 @@ docker compose up -d                                  # qdrant/qdrant:v1.18.0 on
 
 # 2. Python env
 python3.12 -m venv .venv
-.venv/bin/python -m pip install -U pip uv
-.venv/bin/uv pip install -r requirements.lock.txt     # exact pins; or requirements.txt for loose floors
+source .venv/bin/activate
+python -m pip install -U pip uv
+uv pip install -r requirements.lock.txt               # exact pins; or requirements.txt for loose floors
 
 # 3. Build the two collections from the committed corpus (one-time; ~22.8k docs).
 #    First run downloads + caches the FastEmbed models, so it takes a few minutes.
-.venv/bin/python scripts/setup_collections.py         # musique: dense + bm25 + miniCOIL
-.venv/bin/python scripts/setup_colbert.py             # musique_colbert: dense (reused) + ColBERT multivector
+python scripts/setup_collections.py                   # musique: dense + miniCOIL
+python scripts/setup_colbert.py                       # musique_colbert: dense (reused) + ColBERT multivector
 
-# 4. Verify the VM is "Ready"
-.venv/bin/python scripts/check_env.py --llm
+# 4. Verify everything is "Ready"
+python scripts/check_env.py --llm
 ```
 
 `check_env.py` confirms the libraries import, FastEmbed exposes the models the lab
 uses, Qdrant is healthy, **both collections are populated**, and (with `--llm`) the
-Claude agent and the gpt-5.5 judge both answer. Then open `notebooks/lab.ipynb` and
-run the Setup cell; it should print `Ready`.
+Claude agent answers. Then open `notebooks/lab.ipynb` and run the Setup cell; it
+should print `Ready`.
 
 ## The stack
 
@@ -62,18 +57,15 @@ run the Setup cell; it should print `Ready`.
 |---|---|
 | Vector DB | Qdrant 1.18.0 (Docker), two collections, named vectors |
 | Dense | `BAAI/bge-base-en-v1.5` (768-d, cosine), FastEmbed / local ONNX |
-| Sparse | `Qdrant/minicoil-v1` (baseline fusion sparse) + `Qdrant/bm25` (divergence-detector candidate) |
+| Sparse | `Qdrant/minicoil-v1` (word-sense-aware sparse, IDF modifier) - the baseline fusion sparse |
 | Fusion | Reciprocal Rank Fusion (RRF), server-side via the Qdrant Query API - **no cross-encoder in the baseline** |
 | Tier-2 fix | `answerdotai/answerai-colbert-small-v1` ColBERT late interaction (Qdrant native multivector, MaxSim) |
-| Reranker | `jinaai/jina-reranker-v2-base-multilingual` cross-encoder - a *measured alternative* to the ColBERT rung, not baseline |
 | Agent | Claude Sonnet 4.6 via LiteLLM (decompose + answer) |
 | Stop autorater | Claude Haiku 4.5 via LiteLLM (the optional LLM sufficiency check) |
-| Judge | gpt-5.5 (cross-provider, reduces self-preference bias; eval only) |
-| IR metrics | ranx |
 | Dataset | MuSiQue, recast as a mixed single-hop / multi-hop / unanswerable workload |
 
 All embedding and reranking is local (FastEmbed ONNX), so query-time encoding is free
-and offline; only the agent, the stop autorater, and the judge hit the network.
+and offline; only the agent and the stop autorater hit the network.
 
 ## The mixed workload and answer context
 
@@ -85,33 +77,32 @@ drive the STOP decision.
 
 ## Reproducibility
 
-Everything needed to rebuild is in the repo:
+Everything needed to run the lab is in the repo:
 
 - `data/` - the corpus (`corpus.jsonl`, 22,808 passages), the question splits
   (`questions.jsonl`), the derived mixed workload (`questions_mixed.jsonl`), and the
   dataset metadata. The collections in step 3 are built directly from these files.
 - `artifacts/mixed_manifest.json` - the **frozen** mixed-workload population (seeded;
   every question id per split is pinned), so the eval set is reproducible by id.
-- `artifacts/*.json` - frozen manifests and precomputed workload-level scorecards used
-  by the STOP and Wrap sections. The signal benchmark in the notebook runs live over
-  the calibration split.
+- `artifacts/{headline_final_v25,targeted_stop_v25}.json` - the precomputed
+  workload-level scorecards the Wrap and STOP sections read, committed as frozen
+  evidence. The signal benchmark in the notebook itself runs live over the calibration
+  split.
 
-To regenerate the **dataset itself** from MuSiQue (needs HuggingFace access):
-`scripts/prepare_data.py` then `scripts/prepare_mixed.py`. To regenerate the eval
-artifacts: the `scripts/run_*.py` and `scripts/calibrate_mixed.py` (these call the
-agent/judge LLMs).
+The notebook builds retrieval, the signals, the gate, IRCoT, and STOP **inline from
+primitives** - lift any cell to reproduce the method or adapt it to your own corpus. To
+rebuild the **dataset** from MuSiQue (needs HuggingFace access): `scripts/prepare_data.py`,
+then `scripts/audit_single_hop.py`, then `scripts/prepare_mixed.py`.
 
 ## Repo layout
 
 ```
-notebooks/lab.ipynb    # the lab: CP1 concepts -> CP2 gate -> CP3 loop/STOP -> wrap
+notebooks/lab.ipynb    # the lab (built inline from primitives): CP1 concepts -> CP2 gate -> CP3 loop/STOP -> wrap
+deck/intro_outline.md  # workshop intro deck outline
 docker-compose.yml     # Qdrant
 requirements.txt       # loose deps; requirements.lock.txt has exact pins
-src/                   # reusable modules: config, data, retrieval, signals, policy, agent, trace, eval
-scripts/               # data build, collection setup, env check, eval + deliverable generators
+src/                   # config, data, labkit (constants/loaders + notebook rendering)
+scripts/               # dataset build, collection setup, env check
 data/                  # corpus, splits, derived mixed workload
-artifacts/             # precomputed eval artifacts + frozen manifest the notebook reads
+artifacts/             # the frozen manifest + scorecards the notebook reads
 ```
-
-Modules under `src/` are imported by bare name; scripts and the notebook put `src/` on
-`sys.path` first.

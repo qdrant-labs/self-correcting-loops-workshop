@@ -9,8 +9,7 @@ per-hop gold supporting paragraphs; unanswerable items have no gold and drive th
   - resolves per-hop gold to stable, content-addressed doc ids
   - partitions non-hero questions into disjoint calibration / validation / test
     splits (seeded, stratified by answerable x hop-count)
-  - writes data/corpus.jsonl, data/questions.jsonl, data/hero_queries.json,
-    data/dataset_meta.json
+  - writes data/corpus.jsonl, data/questions.jsonl, data/dataset_meta.json
   - runs integrity assertions: splits disjoint; every gold paragraph reachable
 
 Eval integrity: MuSiQue is locked as primary BEFORE any tuning;
@@ -297,7 +296,6 @@ def main() -> int:
     corpus_rows = sorted(corpus.values(), key=lambda d: d["doc_id"])
     write_jsonl(config.DATA_DIR / "corpus.jsonl", corpus_rows)
     write_jsonl(config.DATA_DIR / "questions.jsonl", split_records + hero_records)
-    (config.DATA_DIR / "hero_queries.json").write_text(json.dumps(hero_records, indent=2, ensure_ascii=False))
 
     split_sizes = {s: len(ids) for s, ids in ids_by_split.items()}
     ans_by_split = {
@@ -322,7 +320,7 @@ def main() -> int:
 
     print("\n=== build summary ===")
     print(json.dumps(meta, indent=2))
-    print(f"\nwrote -> {config.DATA_DIR}/  (corpus.jsonl, questions.jsonl, hero_queries.json, dataset_meta.json)")
+    print(f"\nwrote -> {config.DATA_DIR}/  (corpus.jsonl, questions.jsonl, dataset_meta.json)")
     print("integrity: splits disjoint OK; all answerable gold reachable OK")
     return 0
 

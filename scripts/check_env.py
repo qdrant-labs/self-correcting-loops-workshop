@@ -2,14 +2,14 @@
 
 Verifies the VM is at the "Ready" state for the lab:
   - core libraries import at the expected versions
-  - FastEmbed exposes the dense / sparse / reranker models we use
+  - FastEmbed exposes the dense / sparse models the lab uses
   - Qdrant is reachable and healthy
   - both lab collections (musique + musique_colbert) are built and populated
-  - (with --llm) the Claude agent path and the gpt-5.5 judge path both answer
+  - (with --llm) the Claude agent path answers
 
 Usage:
   python scripts/check_env.py            # libs + models + qdrant
-  python scripts/check_env.py --llm      # also ping Claude (via LiteLLM) and gpt-5.5
+  python scripts/check_env.py --llm      # also ping the Claude agent (via LiteLLM)
 """
 from __future__ import annotations
 
@@ -32,22 +32,17 @@ CORE = [
     ("fastembed", "fastembed"),
     ("litellm", "litellm"),
     ("anthropic", "anthropic"),
-    ("openai", "openai"),
-    ("ranx", "ranx"),
     ("sklearn", "scikit-learn"),
     ("datasets", "datasets"),
     ("numpy", "numpy"),
     ("pandas", "pandas"),
-    ("numba", "numba"),          # transitive via ranx; the usual 3.x-too-new blocker
     ("onnxruntime", "onnxruntime"),  # transitive via fastembed
 ]
 
 # The exact models the lab uses (from config). Matched against the FastEmbed
 # supported-model lists so a vendor rename surfaces here, not at index time.
 DENSE_MODEL = config.DENSE_MODEL
-BM25_MODEL = config.BM25_MODEL
 MINICOIL_MODEL = config.MINICOIL_MODEL
-RERANKER_MODEL = config.RERANKER_MODEL
 
 
 def _ok(msg: str) -> None:
@@ -89,7 +84,6 @@ def check_fastembed_models() -> bool:
     print("[fastembed models]")
     try:
         from fastembed import SparseTextEmbedding, TextEmbedding
-        from fastembed.rerank.cross_encoder import TextCrossEncoder
     except Exception as exc:  # noqa: BLE001
         _err(f"import fastembed classes: {exc}")
         return False
@@ -97,7 +91,6 @@ def check_fastembed_models() -> bool:
     ok = True
     dense = _model_names(TextEmbedding)
     sparse = _model_names(SparseTextEmbedding)
-    rerankers = _model_names(TextCrossEncoder)
 
     if DENSE_MODEL in dense:
         _ok(f"dense    {DENSE_MODEL}")
@@ -105,22 +98,10 @@ def check_fastembed_models() -> bool:
         _err(f"dense    {DENSE_MODEL} NOT in supported list")
         ok = False
 
-    if BM25_MODEL in sparse:
-        _ok(f"sparse   {BM25_MODEL}")
-    else:
-        _err(f"sparse   {BM25_MODEL} NOT in supported list")
-        ok = False
-
     if MINICOIL_MODEL in sparse:
         _ok(f"sparse   {MINICOIL_MODEL}")
     else:
         _err(f"sparse   {MINICOIL_MODEL} NOT in supported list")
-        ok = False
-
-    if RERANKER_MODEL in rerankers:
-        _ok(f"reranker {RERANKER_MODEL}")
-    else:
-        _err(f"reranker {RERANKER_MODEL} NOT in supported list")
         ok = False
 
     return ok
@@ -183,9 +164,7 @@ def check_collections() -> bool:
 
 
 def check_llms() -> bool:
-    """Ping the two model paths the lab depends on: the Claude agent and the gpt-5.5
-    judge, both via LiteLLM. gpt-5.5 is a reasoning model, so it needs a real token
-    budget or it spends the whole budget reasoning and returns empty content."""
+    """Ping the model path the lab depends on: the Claude agent, via LiteLLM."""
     print("[llms]")
     try:
         from dotenv import load_dotenv
@@ -196,11 +175,8 @@ def check_llms() -> bool:
         return False
 
     ok = True
-    for key in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY"):
-        if not os.environ.get(key):
-            _err(f"{key} not set")
-            ok = False
-    if not ok:
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        _err("ANTHROPIC_API_KEY not set")
         return False
 
     os.environ.setdefault("LITELLM_LOG", "ERROR")
@@ -210,7 +186,6 @@ def check_llms() -> bool:
 
     for label, model, max_tokens in (
         ("agent", config.AGENT_MODEL, 16),
-        ("judge", config.JUDGE_MODEL, 400),  # reasoning model: needs headroom
     ):
         try:
             resp = litellm.completion(
@@ -232,7 +207,7 @@ def check_llms() -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--llm", action="store_true", help="also ping Claude + gpt-5.5")
+    parser.add_argument("--llm", action="store_true", help="also ping the Claude agent")
     args = parser.parse_args()
 
     results = {
