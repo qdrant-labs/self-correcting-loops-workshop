@@ -77,7 +77,9 @@ def main() -> int:
         client.delete_collection(config.COLLECTION)
     client.create_collection(
         collection_name=config.COLLECTION,
-        vectors_config={config.DENSE_VEC: models.VectorParams(size=config.DENSE_DIM, distance=models.Distance.COSINE)},
+        vectors_config={
+            config.DENSE_VEC: models.VectorParams(size=config.DENSE_DIM, distance=models.Distance.COSINE)
+            },
         sparse_vectors_config={
             config.MINICOIL_VEC: models.SparseVectorParams(modifier=models.Modifier.IDF),
         },
