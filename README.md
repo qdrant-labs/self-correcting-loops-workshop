@@ -42,14 +42,7 @@ uv pip install -r requirements.lock.txt               # exact pins; or requireme
 python scripts/setup_collections.py                   # musique: dense + miniCOIL
 python scripts/setup_colbert.py                       # musique_colbert: dense (reused) + ColBERT multivector
 
-# 4. Verify everything is "Ready"
-python scripts/check_env.py --llm
 ```
-
-`check_env.py` confirms the libraries import, FastEmbed exposes the models the lab
-uses, Qdrant is healthy, **both collections are populated**, and (with `--llm`) the
-Claude agent answers. Then open `notebooks/lab.ipynb` and run the Setup cell; it
-should print `Ready`.
 
 ## The stack
 

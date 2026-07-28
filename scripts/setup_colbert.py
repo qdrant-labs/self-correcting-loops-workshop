@@ -10,14 +10,13 @@ The ColBERT deep-retrieval action (retrieval.colbert_search) prefetches with den
 rescores the candidates with ColBERT MaxSim. This script only needs dense + colbert.
 
 Usage:
-  python scripts/setup_colbert.py --limit 256   # quick validation
-  python scripts/setup_colbert.py               # full corpus
+  python scripts/setup_colbert.py
 """
 from __future__ import annotations
 
-import argparse
 import sys
 import time
+import warnings
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -25,25 +24,18 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 import config  # noqa: E402
 import data  # noqa: E402
 
+warnings.filterwarnings("ignore")
+from fastembed import LateInteractionTextEmbedding, TextEmbedding  # noqa: E402
+from qdrant_client import QdrantClient, models  # noqa: E402
+from tqdm import tqdm  # noqa: E402
+
+EMBED_BATCH = 64   # docs per ColBERT forward pass
+UPSERT_BATCH = 128  # points per upsert request
+
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--limit", type=int, default=0, help="embed only the first N docs (validation)")
-    ap.add_argument("--batch-size", type=int, default=64)
-    ap.add_argument("--upsert-batch", type=int, default=128)
-    args = ap.parse_args()
-
-    import warnings
-
-    warnings.filterwarnings("ignore")
-    from fastembed import LateInteractionTextEmbedding
-    from qdrant_client import QdrantClient, models
-    from tqdm import tqdm
-
     corpus = data.load_corpus()
     doc_ids = sorted(corpus.keys())  # SAME deterministic order as setup_collections.py
-    if args.limit:
-        doc_ids = doc_ids[: args.limit]
     docs = [corpus[d] for d in doc_ids]
     texts = [data.doc_embed_text(d) for d in docs]
     n = len(docs)
@@ -59,7 +51,7 @@ def main() -> int:
     t0 = time.time()
     colbert_vecs = [
         [row.tolist() for row in v]  # (n_tokens, 96) -> list[list[float]]
-        for v in tqdm(colbert_model.embed(texts, batch_size=args.batch_size), total=n, desc="colbert")
+        for v in tqdm(colbert_model.embed(texts, batch_size=EMBED_BATCH), total=n, desc="colbert")
     ]
     print(f"  colbert embedded in {time.time()-t0:.1f}s")
 
@@ -80,8 +72,8 @@ def main() -> int:
     print(f"created collection {config.COLBERT_COLLECTION!r} (dense + colbert MaxSim multivector)")
 
     t0 = time.time()
-    for start in tqdm(range(0, n, args.upsert_batch), desc="upsert"):
-        end = min(start + args.upsert_batch, n)
+    for start in tqdm(range(0, n, UPSERT_BATCH), desc="upsert"):
+        end = min(start + UPSERT_BATCH, n)
         batch_ids = [docs[i]["doc_id"] for i in range(start, end)]
         # reuse dense from `musique` (byte-identical; no re-embed) - retrieve by id
         got = client.retrieve(config.COLLECTION, ids=batch_ids, with_payload=False, with_vectors=[config.DENSE_VEC])
@@ -89,13 +81,13 @@ def main() -> int:
         points = []
         for i in range(start, end):
             doc = docs[i]
-            dv = dense_by_id.get(doc["doc_id"])
-            if dv is None:
+            dense = dense_by_id.get(doc["doc_id"])
+            if dense is None:
                 raise SystemExit(f"ERROR: dense vector missing in {config.COLLECTION!r} for {doc['doc_id']}")
             points.append(
                 models.PointStruct(
                     id=doc["doc_id"],
-                    vector={config.DENSE_VEC: dv, config.COLBERT_VEC: colbert_vecs[i]},
+                    vector={config.DENSE_VEC: dense, config.COLBERT_VEC: colbert_vecs[i]},
                     payload={"title": doc["title"], "text": doc["text"], "supports": doc.get("supports", [])},
                 )
             )
@@ -108,14 +100,12 @@ def main() -> int:
 
     # smoke: a dense-prefetch -> colbert MaxSim query returns results
     q = "Who owns the Gold Spike in Las Vegas?"
-    from fastembed import TextEmbedding
-
-    dq = next(iter(TextEmbedding(config.DENSE_MODEL).query_embed(q))).tolist()
-    cq = [r.tolist() for r in next(iter(colbert_model.query_embed(q)))]
+    dense_q = next(iter(TextEmbedding(config.DENSE_MODEL).query_embed(q))).tolist()
+    colbert_q = [r.tolist() for r in next(iter(colbert_model.query_embed(q)))]
     res = client.query_points(
         config.COLBERT_COLLECTION,
-        prefetch=[models.Prefetch(query=dq, using=config.DENSE_VEC, limit=50)],
-        query=cq, using=config.COLBERT_VEC, limit=5, with_payload=True,
+        prefetch=[models.Prefetch(query=dense_q, using=config.DENSE_VEC, limit=50)],
+        query=colbert_q, using=config.COLBERT_VEC, limit=5, with_payload=True,
     ).points
     print(f"smoke query -> {len(res)} hits; top: {res[0].payload.get('title','')[:60]!r} (MaxSim {res[0].score:.3f})")
     print("gate: count sane OK; dense-prefetch + ColBERT MaxSim rescore OK")
